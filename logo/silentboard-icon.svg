@@ -1,24 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
   <!-- SilentBoard – Copyright (C) 2026 ostalbweb.de · SPDX-License-Identifier: GPL-3.0-or-later -->
-  <!-- Fernseher -->
-  <rect x="8" y="14" width="112" height="84" rx="14" fill="#262421" stroke="#77716a" stroke-width="2"/>
-  <rect x="16" y="22" width="96" height="68" rx="6" fill="#f0d9b5"/>
-  <!-- Schachbrettmuster im Bildschirm -->
-  <g fill="#b58863">
-    <rect x="16" y="22" width="24" height="17"/><rect x="64" y="22" width="24" height="17"/>
-    <rect x="40" y="39" width="24" height="17"/><rect x="88" y="39" width="24" height="17"/>
-    <rect x="16" y="56" width="24" height="17"/><rect x="64" y="56" width="24" height="17"/>
-    <rect x="40" y="73" width="24" height="17"/><rect x="88" y="73" width="24" height="17"/>
+  <rect x="8" y="14" width="112" height="84" rx="14" fill="#171717" stroke="#3c4640" stroke-width="2"/>
+  <clipPath id="scr"><rect x="16" y="22" width="96" height="68" rx="6"/></clipPath>
+  <g clip-path="url(#scr)"><rect x="16" y="22" width="24" height="17" fill="#2e473b"/><rect x="40" y="22" width="24" height="17" fill="#1f2e27"/><rect x="64" y="22" width="24" height="17" fill="#2e473b"/><rect x="88" y="22" width="24" height="17" fill="#1f2e27"/><rect x="16" y="39" width="24" height="17" fill="#1f2e27"/><rect x="40" y="39" width="24" height="17" fill="#2e473b"/><rect x="64" y="39" width="24" height="17" fill="#1f2e27"/><rect x="88" y="39" width="24" height="17" fill="#2e473b"/><rect x="16" y="56" width="24" height="17" fill="#2e473b"/><rect x="40" y="56" width="24" height="17" fill="#1f2e27"/><rect x="64" y="56" width="24" height="17" fill="#2e473b"/><rect x="88" y="56" width="24" height="17" fill="#1f2e27"/><rect x="16" y="73" width="24" height="17" fill="#1f2e27"/><rect x="40" y="73" width="24" height="17" fill="#2e473b"/><rect x="64" y="73" width="24" height="17" fill="#1f2e27"/><rect x="88" y="73" width="24" height="17" fill="#2e473b"/></g>
+  <g transform="translate(64 26) scale(0.76) translate(-42 -11)">
+    <g fill="#5a9a7a" stroke="#171717" stroke-width="4" stroke-linejoin="round" paint-order="stroke"><path d="M14 11H28V21H35V11H49V21H56V11H70V32L63 37V72L70 79V81H14V79L21 72V37L14 32Z"/><rect x="9" y="80" width="66" height="9" rx="2.5"/></g><rect x="27" y="40" width="9.5" height="9.5" rx="1" fill="#2c5a45"/><rect x="38" y="40" width="9.5" height="9.5" rx="1" fill="#a9d4bc"/><rect x="49" y="40" width="9.5" height="9.5" rx="1" fill="#a9d4bc"/><rect x="27" y="51" width="9.5" height="9.5" rx="1" fill="#a9d4bc"/><rect x="38" y="51" width="9.5" height="9.5" rx="1" fill="#2c5a45"/><rect x="49" y="51" width="9.5" height="9.5" rx="1" fill="#a9d4bc"/><rect x="27" y="62" width="9.5" height="9.5" rx="1" fill="#a9d4bc"/><rect x="38" y="62" width="9.5" height="9.5" rx="1" fill="#a9d4bc"/><rect x="49" y="62" width="9.5" height="9.5" rx="1" fill="#2c5a45"/>
   </g>
-  <rect x="16" y="22" width="96" height="68" rx="6" fill="none" stroke="#262421" stroke-width="2"/>
-  <!-- Bauer -->
-  <g fill="#1b1a18" stroke="#f7f3ec" stroke-width="3" stroke-linejoin="round">
-    <path d="M64 30a10 10 0 0 1 6.2 17.8c4.6 2.6 7.8 7.4 7.8 13.2h-6c1.4 6 4.6 10.4 9 14v8H47v-8c4.4-3.6 7.6-8 9-14h-6c0-5.8 3.2-10.6 7.8-13.2A10 10 0 0 1 64 30z"/>
-  </g>
-  <!-- Fuß -->
-  <rect x="56" y="98" width="16" height="10" fill="#262421"/>
-  <rect x="38" y="106" width="52" height="8" rx="4" fill="#262421" stroke="#77716a" stroke-width="2"/>
-  <!-- "still": Finger-auf-Lippen-Symbol als Punkt-Badge -->
-  <circle cx="106" cy="20" r="16" fill="#629924" stroke="#161512" stroke-width="3"/>
-  <text x="106" y="26.5" text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif" font-size="19" font-weight="700" fill="#fff">…</text>
+  <rect x="56" y="98" width="16" height="10" fill="#171717"/>
+  <rect x="38" y="106" width="52" height="8" rx="4" fill="#171717" stroke="#3c4640" stroke-width="2"/>
+  <path d="M106 4a16 16 0 1 1-10.2 28.4L88 36l3-8.6A16 16 0 0 1 106 4z" fill="#5a9a7a" stroke="#171717" stroke-width="3" stroke-linejoin="round"/>
+  <g fill="#fff"><circle cx="99" cy="20" r="2.4"/><circle cx="106" cy="20" r="2.4"/><circle cx="113" cy="20" r="2.4"/></g>
 </svg>

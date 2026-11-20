@@ -5,7 +5,8 @@
   "scripts": {
     "postinstall": "npm --prefix quellcode install",
     "build": "npm --prefix quellcode run build",
-    "vorschau": "bash werkzeuge/vorschau.sh"
+    "vorschau": "bash werkzeuge/vorschau.sh",
+    "symbole": "node werkzeuge/symbole.mjs"
   },
   "license": "GPL-3.0-or-later",
   "author": "ostalbweb.de",
