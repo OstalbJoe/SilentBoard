@@ -1,0 +1,16 @@
+{
+  "name": "silentboard-root",
+  "private": true,
+  "description": "Leitet an quellcode/ weiter, damit 'npm install' und 'npm run build' auch hier im Hauptordner funktionieren.",
+  "scripts": {
+    "postinstall": "npm --prefix quellcode install",
+    "build": "npm --prefix quellcode run build",
+    "vorschau": "bash werkzeuge/vorschau.sh"
+  },
+  "license": "GPL-3.0-or-later",
+  "author": "ostalbweb.de",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OstalbJoe/SilentBoard.git"
+  }
+}

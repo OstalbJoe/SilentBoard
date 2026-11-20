@@ -1,0 +1,12 @@
+# Abhängigkeiten – werden mit "npm install" wiederhergestellt
+node_modules/
+
+# Build-Ergebnisse – werden mit "npm run build" erzeugt und als GitHub-Release angehängt
+/SilentBoard.html
+/web/
+quellcode/libs.js
+
+# Lokale Dateien, nicht für das Repo
+/SilentBoard-Collage.png
+*.log
+.DS_Store

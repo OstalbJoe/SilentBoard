@@ -1,0 +1,22 @@
+{
+  "name": "silentboard",
+  "private": true,
+  "description": "Schachpartien im Training vorführen: Trainer sieht Züge/Kommentare/Engine, der Fernseher nur das Brett.",
+  "scripts": {
+    "build": "esbuild entry.js --bundle --minify --format=iife --target=es2020 --outfile=libs.js && node build.mjs"
+  },
+  "dependencies": {
+    "chess.js": "1.4.0",
+    "chessground": "9.2.1",
+    "stockfish": "19.0.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  },
+  "license": "GPL-3.0-or-later",
+  "author": "ostalbweb.de",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OstalbJoe/SilentBoard.git"
+  }
+}

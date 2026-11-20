@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "SilentBoard",
+  "short_name": "SilentBoard",
+  "description": "Schachpartien im Training vorführen: Züge, Kommentare und Engine nur für den Trainer – auf dem Fernseher nur das Brett.",
+  "lang": "de",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#161512",
+  "theme_color": "#262421",
+  "categories": ["education", "games"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
