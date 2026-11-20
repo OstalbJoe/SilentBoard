@@ -93,8 +93,8 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .brand { display: flex; align-items: center; gap: 10px; font-size: 18px; }
 .brand-icon { width: 44px; height: 44px; }
 .brand small { font-weight: 400; color: var(--muted); }
-#src { flex: 1 1 260px; min-width: 180px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); }
-#gameSel { max-width: 280px; padding: 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); }
+#src { flex: 1 1 200px; min-width: 150px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); }
+#gameSel { max-width: 220px; padding: 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); }
 .tv-btn { display: inline-flex; align-items: center; gap: 8px; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); display: inline-block; flex: none; }
 .dot.on { background: var(--good); box-shadow: 0 0 6px var(--good); }
@@ -155,10 +155,11 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .side-grid { flex: 1; min-height: 0; display: grid; gap: 10px; grid-template-columns: 1fr; grid-template-rows: auto auto auto minmax(160px, 1fr) auto; }
 .side-grid > .moves { grid-row: 4; }
 .side-grid > * { min-width: 0; }
+.side-grid > .moves { min-height: 0; overflow-y: auto; }
 .side { overflow: hidden; }
 .pv { min-width: 0; }
 @container (min-width: 600px) {
-  .side-grid { grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr); grid-template-rows: auto auto minmax(min-content, 1fr) auto; }
+  .side-grid { grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr); grid-template-rows: auto auto minmax(150px, 1fr) auto; }
   .side-grid > .moves { grid-column: 1; grid-row: 1 / span 4; }
   .side-grid > .engine { grid-column: 2; grid-row: 1; }
   .side-grid > .next { grid-column: 2; grid-row: 2; }
@@ -192,7 +193,7 @@ select.mini { padding: 1px 4px; border-radius: 4px; border: 1px solid var(--line
 .next .cm { color: var(--comment); font-size: 13px; }
 .next .pgn-eval { color: var(--muted); font-size: 13px; }
 
-.notes { padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; }
+.notes { padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; min-height: 0; overflow: auto; }
 .notes .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); display: flex; align-items: center; gap: 8px; }
 .notes .lbl .where { text-transform: none; letter-spacing: 0; color: var(--text); font-weight: 600; font-size: 13px; }
 .notes textarea {
