@@ -15,6 +15,7 @@ So denkt die Gruppe selbst über den nächsten Zug nach.
 - Zweites Fenster für den Fernseher, wird automatisch mitgeführt
 - Eingebaute Engine (Stockfish 19), läuft lokal – nur für den Trainer sichtbar
 - „TV einfrieren“ zum heimlichen Vorausschauen, Vorschläge der Gruppe als eigene Varianten
+- Eigene Analyse: Kommentare schreiben und bearbeiten, Züge bewerten (!, ?, !? …) und alles als **PGN-Datei speichern**
 - Läuft ohne Installation als einzelne HTML-Datei oder als installierbare Web-App, auch offline
 
 ## Benutzen

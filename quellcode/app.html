@@ -133,17 +133,19 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .players .elo { color: var(--muted); font-weight: 400; font-size: 14px; }
 .game-meta { font-size: 13px; color: var(--muted); }
 
-.side-grid { flex: 1; min-height: 0; display: grid; gap: 10px; grid-template-columns: 1fr; grid-template-rows: auto auto minmax(160px, 1fr) auto; }
-.side-grid > .moves { grid-row: 3; }
+.side-grid { flex: 1; min-height: 0; display: grid; gap: 10px; grid-template-columns: 1fr; grid-template-rows: auto auto auto minmax(160px, 1fr) auto; }
+.side-grid > .moves { grid-row: 4; }
 .side-grid > * { min-width: 0; }
 .side { overflow: hidden; }
 .pv { min-width: 0; }
 @container (min-width: 720px) {
-  .side-grid { grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr); grid-template-rows: auto auto 1fr; }
-  .side-grid > .moves { grid-column: 1; grid-row: 1 / span 3; }
+  .side-grid { grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr); grid-template-rows: auto auto 1fr auto; }
+  .side-grid > .moves { grid-column: 1; grid-row: 1 / span 4; }
   .side-grid > .engine { grid-column: 2; grid-row: 1; }
   .side-grid > .next { grid-column: 2; grid-row: 2; }
-  .side-grid > .tvbox { grid-column: 2; grid-row: 3; align-self: end; }
+  .side-grid > .notes { grid-column: 2; grid-row: 3; }
+  .side-grid > .tvbox { grid-column: 2; grid-row: 4; }
+  .notes textarea { flex: 1; }
 }
 
 .engine { padding: 8px 12px; }
@@ -171,6 +173,21 @@ select.mini { padding: 1px 4px; border-radius: 4px; border: 1px solid var(--line
 .next .cm { color: var(--comment); font-size: 13px; }
 .next .pgn-eval { color: var(--muted); font-size: 13px; }
 
+.notes { padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+.notes .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.notes .lbl .where { text-transform: none; letter-spacing: 0; color: var(--text); font-weight: 600; font-size: 13px; }
+.notes textarea {
+  width: 100%; min-height: 70px; resize: none; padding: 8px 10px; border-radius: 6px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; font-size: 14px; line-height: 1.45;
+}
+.notes textarea:focus { outline: none; border-color: var(--accent); }
+.notes textarea:disabled { opacity: .5; }
+.notes .row { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.notes .nagbtn { min-width: 34px; padding: 3px 6px; font-weight: 700; font-size: 14px; }
+.notes .nagbtn.on { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.notes .grow { flex: 1; }
+.notes .hint { font-size: 12px; color: var(--muted); }
+.cmt { white-space: pre-line; }
 .moves { overflow: auto; position: relative; padding: 4px 0; font-size: 15px; min-height: 0; }
 .moves .empty-state { padding: 14px 16px; color: var(--muted); font-size: 14px; }
 .moves .empty-state b { color: var(--text); }
@@ -296,6 +313,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
     <input id="src" type="text" placeholder="Lichess-Link (Partie oder Studie) oder Partie-ID einfügen …" autocomplete="off" spellcheck="false">
     <button id="loadBtn" class="primary">Laden</button>
     <button id="pgnBtn" title="PGN-Text einfügen">PGN einfügen</button>
+    <button id="pgnSaveTop" title="Partie mit Kommentaren als PGN-Datei speichern">PGN speichern</button>
     <select id="gameSel" hidden title="Partie / Kapitel wählen"></select>
     <button id="tvBtn" class="tv-btn" title="Öffnet ein zweites Fenster nur mit dem Brett – auf den Fernseher ziehen"><span class="dot" id="tvDot"></span><span id="tvBtnText">TV-Fenster öffnen</span></button>
     <button id="helpBtn" title="Tastenkürzel">?</button>
@@ -348,6 +366,22 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
         <section class="card next" id="nextBox">
           <div class="lbl">Als Nächstes in der Partie</div>
           <div id="nextBody"><span class="alts">–</span></div>
+        </section>
+
+        <section class="card notes" id="notesBox">
+          <div class="lbl">Eigene Analyse <span class="where" id="notesWhere"></span></div>
+          <textarea id="noteText" spellcheck="true" placeholder="Kommentar zu diesem Zug schreiben … (nur hier sichtbar, nicht auf dem TV)"></textarea>
+          <div class="row" id="nagRow" title="Zug bewerten (nochmal klicken = entfernen)">
+            <button class="nagbtn" data-nag="3" title="sehr guter Zug">!!</button>
+            <button class="nagbtn" data-nag="1" title="guter Zug">!</button>
+            <button class="nagbtn" data-nag="5" title="interessanter Zug">!?</button>
+            <button class="nagbtn" data-nag="6" title="zweifelhafter Zug">?!</button>
+            <button class="nagbtn" data-nag="2" title="Fehler">?</button>
+            <button class="nagbtn" data-nag="4" title="grober Fehler">??</button>
+            <span class="grow"></span>
+            <button id="savePgnBtn" class="primary" title="Partie mit allen Kommentaren und eigenen Varianten als PGN-Datei speichern">PGN speichern</button>
+          </div>
+          <div class="hint" id="notesHint">Änderungen merkt sich SilentBoard automatisch. „PGN speichern“ legt eine Datei an, z. B. für Lichess oder ChessBase.</div>
         </section>
 
         <section class="card moves" id="moves"></section>
@@ -436,6 +470,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
       <kbd>P</kbd><span>TV einfrieren / wieder freigeben – zum heimlichen Vorausschauen</span>
       <kbd>E</kbd><span>Engine an/aus</span>
       <kbd>Entf</kbd><span>eigenen (lila) Zug samt Fortsetzung löschen</span>
+      <kbd>Esc</kbd><span>Kommentarfeld verlassen – danach gehen die Pfeiltasten wieder durch die Partie</span>
       <kbd>Rechtsklick</kbd><span>Pfeil ziehen bzw. Feld markieren (Shift = rot, Alt = blau, Shift+Alt = gelb). Geht auf den TV, wenn „Meine Pfeile“ an ist.</span>
       <kbd>Ziehen</kbd><span>Figuren auf deinem Brett ziehen: probiert Teilnehmer-Vorschläge als neue Variante aus (lila)</span>
     </div>
@@ -1173,6 +1208,7 @@ else {
     if (S.treeDirty) { renderMoves(); S.treeDirty = false; }
     else markActive();
     renderNext();
+    renderNotes();
 
     $('#bPrev').disabled = $('#bFirst').disabled = !n.parent;
     $('#bNext').disabled = $('#bLast').disabled = !n.children.length;
@@ -1333,6 +1369,131 @@ else {
     }
     if (n.eval != null) parts.push(`<div class="pgn-eval">Lichess-Analyse hier: ${esc(fmtEvalStr(n.eval))}</div>`);
     body.innerHTML = parts.join('');
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Eigene Analyse: Kommentar + Bewertung zum aktuellen Zug             */
+  /* ------------------------------------------------------------------ */
+  const MOVE_NAGS = [1, 2, 3, 4, 5, 6];
+  let noteNode = null;
+  function renderNotes() {
+    const n = S.cur, ta = $('#noteText');
+    if (noteNode !== n) {
+      noteNode = n;
+      // vorhandene Kommentare zum Bearbeiten anzeigen (Lichess-Texte gleich übersetzt)
+      ta.value = n.comments.map(translateComment).join('\n\n');
+    }
+    $('#notesWhere').textContent = n.san ? `nach ${moveNoText(n)} ${fmt(n.san)}` : 'zur ganzen Partie (vor dem 1. Zug)';
+    ta.placeholder = n.san
+      ? 'Kommentar zu diesem Zug schreiben … (nur hier sichtbar, nicht auf dem TV)'
+      : 'Einleitung zur Partie schreiben … (nur hier sichtbar)';
+    for (const b of document.querySelectorAll('#nagRow .nagbtn')) {
+      b.disabled = !n.san;
+      b.classList.toggle('on', n.nags.includes(+b.dataset.nag));
+    }
+  }
+  let noteTimer = 0;
+  function onNoteInput() {
+    const n = noteNode;
+    if (!n) return;
+    const text = $('#noteText').value.replace(/[{}]/g, m => (m === '{' ? '(' : ')')).trim();
+    n.comments = text ? [text] : [];
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(() => { S.treeDirty = true; renderMoves(); S.treeDirty = false; renderNext(); saveSession(); }, 300);
+  }
+  function toggleNag(v) {
+    const n = S.cur;
+    if (!n.san) return;
+    const had = n.nags.includes(v);
+    n.nags = n.nags.filter(x => !MOVE_NAGS.includes(x));
+    if (!had) n.nags.unshift(v);
+    S.treeDirty = true;
+    render();
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* PGN schreiben (mit Kommentaren, Bewertungen, Varianten, Pfeilen)    */
+  /* ------------------------------------------------------------------ */
+  const BRUSH_LETTER = { green: 'G', red: 'R', yellow: 'Y', blue: 'B' };
+  function pgnComment(n) {
+    const parts = [];
+    if (n.comments.length) parts.push(n.comments.join(' ').replace(/[{}]/g, ''));
+    if (n.eval != null) parts.push(`[%eval ${n.eval}]`);
+    const shapes = n.pgnShapes.concat(n.shapes);
+    const arrows = shapes.filter(s => s.dest).map(s => (BRUSH_LETTER[s.brush] || 'G') + s.orig + s.dest);
+    const circles = shapes.filter(s => !s.dest).map(s => (BRUSH_LETTER[s.brush] || 'G') + s.orig);
+    if (circles.length) parts.push(`[%csl ${circles.join(',')}]`);
+    if (arrows.length) parts.push(`[%cal ${arrows.join(',')}]`);
+    return parts.length ? `{ ${parts.join(' ')} }` : '';
+  }
+  function pgnMove(n, forceNum) {
+    const out = [];
+    if (n.pre) { out.push(`{ ${n.pre.join(' ').replace(/[{}]/g, '')} }`); forceNum = true; }
+    if (isWhiteMove(n)) out.push(`${moveNo(n)}.`);
+    else if (forceNum) out.push(`${moveNo(n)}...`);
+    out.push(n.san + n.nags.map(v => ` $${v}`).join(''));
+    const c = pgnComment(n);
+    if (c) out.push(c);
+    return out.join(' ');
+  }
+  // schreibt die Fortsetzung ab "node": Hauptzug, danach seine Alternativen in Klammern
+  function pgnLine(node, needNum, out) {
+    while (node.children.length) {
+      const main = node.children[0];
+      out.push(pgnMove(main, needNum));
+      needNum = !!pgnComment(main);
+      for (const alt of node.children.slice(1)) {
+        const sub = [pgnMove(alt, true)];
+        pgnLine(alt, !!pgnComment(alt), sub);
+        out.push(`(${sub.join(' ')})`);
+        needNum = true;
+      }
+      node = main;
+    }
+  }
+  function treeToPgn() {
+    const h = Object.assign({}, S.headers);
+    const result = S.result && /^(1-0|0-1|1\/2-1\/2|\*)$/.test(S.result) ? S.result : '*';
+    h.Result = result;
+    const order = ['Event', 'Site', 'Date', 'Round', 'White', 'Black', 'Result'];
+    for (const k of order) if (!h[k]) h[k] = '?';
+    const keys = order.concat(Object.keys(h).filter(k => !order.includes(k)));
+    const head = keys.map(k => `[${k} "${String(h[k]).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"]`).join('\n');
+    const toks = [];
+    if (S.root.comments.length) toks.push(`{ ${S.root.comments.join(' ').replace(/[{}]/g, '')} }`);
+    pgnLine(S.root, true, toks);
+    toks.push(result);
+    // Zeilen auf höchstens 80 Zeichen umbrechen (PGN-Standard)
+    const lines = [];
+    let line = '';
+    // [%eval …], [%cal …] nie über zwei Zeilen verteilen
+    const text = toks.join(' ').replace(/\[%[^\]]*\]/g, m => m.replace(/ /g, '\u00a0'));
+    for (const w of text.split(/ +/)) {
+      if (line && line.length + 1 + w.length > 80) { lines.push(line); line = w; }
+      else line = line ? line + ' ' + w : w;
+    }
+    if (line) lines.push(line);
+    return head + '\n\n' + lines.join('\n').replace(/\u00a0/g, ' ') + '\n';
+  }
+  function savePgn() {
+    if (!S.root || (!S.root.children.length && !S.root.comments.length)) {
+      showMsg('Es ist noch keine Partie geladen, die man speichern könnte.', 'err');
+      return;
+    }
+    const pgn = treeToPgn();
+    const h = S.headers;
+    const part = v => (v && v !== '?' ? v : '').replace(/[^\p{L}\p{N}._-]+/gu, '_').replace(/^_+|_+$/g, '');
+    const name = [part(h.White) || 'Weiss', part(h.Black) || 'Schwarz', part(h.Date && h.Date.replace(/\?/g, ''))]
+      .filter(Boolean).join('_') + '_analysiert.pgn';
+    const url = URL.createObjectURL(new Blob([pgn], { type: 'application/x-chess-pgn' }));
+    const a = el('a');
+    a.href = url;
+    a.download = name;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    showMsg(`Gespeichert als „${name}“ (Download-Ordner).`, 'ok');
   }
 
   function fmtEvalStr(e) {
@@ -1630,7 +1791,7 @@ else {
     if (handleKey(e.key)) e.preventDefault();
   });
 
-  document.addEventListener('mousedown', e => { if (e.target.closest('.nav button, .tvbox button, #tvBtn')) e.preventDefault(); });
+  document.addEventListener('mousedown', e => { if (e.target.closest('.nav button, .tvbox button, #tvBtn, #nagRow button')) e.preventDefault(); });
   document.addEventListener('change', e => { if (e.target.matches('input[type=checkbox], select')) e.target.blur(); });
 
   $('#moves').addEventListener('click', e => {
@@ -1654,6 +1815,11 @@ else {
     const t = $('#pgnText').value;
     if (loadPgn(t)) { $('#pgnDialog').close(); showMsg('PGN geladen.', 'ok'); }
   };
+  $('#noteText').addEventListener('input', onNoteInput);
+  $('#noteText').addEventListener('keydown', e => { if (e.key === 'Escape') e.target.blur(); });
+  for (const b of document.querySelectorAll('#nagRow .nagbtn')) b.onclick = () => toggleNag(+b.dataset.nag);
+  $('#savePgnBtn').onclick = savePgn;
+  $('#pgnSaveTop').onclick = savePgn;
   $('#helpBtn').onclick = () => $('#helpDialog').showModal();
   $('#helpClose').onclick = () => $('#helpDialog').close();
   $('#licBtn').onclick = () => $('#licDialog').showModal();
