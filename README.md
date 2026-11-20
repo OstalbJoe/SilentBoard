@@ -11,7 +11,7 @@
 Der Trainer sieht am Laptop Züge, Kommentare und die Engine – der Fernseher zeigt nur das Brett.
 So denkt die Gruppe selbst über den nächsten Zug nach.
 
-- Partien als **Lichess-Link** laden (Partien, Studien, Übertragungen) oder als **PGN** einfügen
+- Partien als **Lichess-Link** laden (Partien, Studien, Übertragungen), als **PGN-Datei** öffnen bzw. ins Fenster ziehen oder als PGN-Text einfügen
 - Zweites Fenster für den Fernseher, wird automatisch mitgeführt
 - Eingebaute Engine (Stockfish 19), läuft lokal – nur für den Trainer sichtbar
 - „TV einfrieren“ zum heimlichen Vorausschauen, Vorschläge der Gruppe als eigene Varianten

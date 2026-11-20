@@ -256,6 +256,11 @@ dialog::backdrop { background: rgba(0,0,0,.6); }
 dialog h3 { margin: 0 0 8px; }
 dialog textarea { width: 100%; height: 50vh; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; font-family: ui-monospace, monospace; font-size: 13px; }
 dialog .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+body.dropping #presenter::after {
+  content: "PGN-Datei hier ablegen"; position: fixed; inset: 12px; z-index: 200; pointer-events: none;
+  display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700;
+  color: var(--accent); background: rgba(0,0,0,.55); border: 4px dashed var(--accent); border-radius: 16px;
+}
 dialog p { color: var(--muted); font-size: 14px; margin: 0 0 8px; }
 dialog.lic { width: min(820px, 94vw); font-size: 14px; }
 dialog.lic p { color: var(--text); }
@@ -311,7 +316,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
     <div class="brand"><img src="@@ICON@@" alt="" class="brand-icon"> SilentBoard <small>Trainer-Ansicht</small></div>
     <input id="src" type="text" placeholder="Lichess-Link (Partie oder Studie) oder Partie-ID einfügen …" autocomplete="off" spellcheck="false">
     <button id="loadBtn" class="primary">Laden</button>
-    <button id="pgnBtn" title="PGN-Text einfügen">PGN einfügen</button>
+    <button id="pgnBtn" title="PGN-Datei öffnen oder PGN-Text einfügen (Datei auch einfach ins Fenster ziehen)">PGN laden</button>
     <button id="pgnSaveTop" title="Partie mit Kommentaren als PGN-Datei speichern">PGN speichern</button>
     <select id="gameSel" hidden title="Partie / Kapitel wählen"></select>
     <button id="tvBtn" class="tv-btn" title="Öffnet ein zweites Fenster nur mit dem Brett – auf den Fernseher ziehen"><span class="dot" id="tvDot"></span><span id="tvBtnText">TV-Fenster öffnen</span></button>
@@ -415,10 +420,14 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
   </main>
 
   <dialog id="pgnDialog">
-    <h3>PGN einfügen</h3>
-    <p>In Lichess: Partie bzw. Studie öffnen → „Teilen &amp; exportieren“ → PGN kopieren. Funktioniert auch mit privaten Studien und ohne Internet.</p>
+    <h3>PGN laden</h3>
+    <p><b>Datei:</b> „Datei öffnen …“ klicken oder die .pgn-Datei einfach ins SilentBoard-Fenster ziehen.<br>
+      <b>Text:</b> unten einfügen, z. B. aus Lichess („Teilen &amp; exportieren“ → PGN kopieren). Beides geht auch ohne Internet.</p>
     <textarea id="pgnText" spellcheck="false" placeholder='[Event "..."]&#10;1. e4 e5 2. Nf3 ...'></textarea>
     <div class="row">
+      <button id="pgnFileBtn" title="PGN-Datei vom Computer öffnen">📂 Datei öffnen …</button>
+      <input type="file" id="pgnFile" accept=".pgn,.txt,application/x-chess-pgn,text/plain" hidden>
+      <span style="flex:1"></span>
       <button id="pgnCancel">Abbrechen</button>
       <button id="pgnOk" class="primary">Laden</button>
     </div>
@@ -990,7 +999,7 @@ else {
     if (!s) { showMsg('Bitte einen Lichess-Link oder eine Partie-ID einfügen.', 'err'); return; }
     if (looksLikePgn(s)) { loadPgn(s); return; }
     const ref = parseLichessRef(s);
-    if (!ref) { showMsg('Das sieht nicht nach einem Lichess-Link aus. Tipp: „PGN einfügen“ geht immer.', 'err'); return; }
+    if (!ref) { showMsg('Das sieht nicht nach einem Lichess-Link aus. Tipp: „PGN laden“ geht immer.', 'err'); return; }
     let url;
     if (ref.kind === 'study') {
       url = `https://lichess.org/api/study/${ref.study}${ref.chapter ? '/' + ref.chapter : ''}.pgn?comments=true&variations=true&clocks=false&orientation=true`;
@@ -1003,7 +1012,7 @@ else {
       const r = await fetch(url, { headers: { Accept: 'application/x-chess-pgn' } });
       if (r.status === 404 || r.status === 403 || r.status === 401) {
         throw new Error(ref.kind === 'study'
-          ? 'Studie nicht gefunden oder privat. Bei privaten Studien: in Lichess „Teilen & exportieren“ → PGN kopieren → hier „PGN einfügen“.'
+          ? 'Studie nicht gefunden oder privat. Bei privaten Studien: in Lichess „Teilen & exportieren“ → PGN kopieren → hier „PGN laden“.'
           : 'Partie nicht gefunden. Stimmt der Link?');
       }
       if (r.status === 429) throw new Error('Lichess meldet zu viele Anfragen – bitte eine Minute warten.');
@@ -1013,7 +1022,7 @@ else {
       if (loadPgn(text, { orientation: ref.color, startPly })) { showMsg('Geladen.', 'ok'); $('#src').blur(); }
     } catch (e) {
       showMsg(e instanceof TypeError
-        ? 'Keine Verbindung zu Lichess. Ohne Internet: in Lichess PGN kopieren und über „PGN einfügen“ laden.'
+        ? 'Keine Verbindung zu Lichess. Ohne Internet: in Lichess PGN kopieren und über „PGN laden“ einfügen.'
         : e.message, 'err');
     } finally {
       updateLoadBtn();
@@ -1300,7 +1309,7 @@ else {
     if (!S.root || (!S.root.children.length && !S.root.comments.length && !S.pgnText)) {
       box.innerHTML = `<div class="empty-state">
         <p><b>So geht's:</b></p>
-        <p>1. Oben einen Lichess-Link einfügen – eine Partie (<i>lichess.org/abcd1234</i>) oder ein Studienkapitel – und „Laden“ klicken. Alternativ „PGN einfügen“.</p>
+        <p>1. Oben einen Lichess-Link einfügen – eine Partie (<i>lichess.org/abcd1234</i>) oder ein Studienkapitel – und „Laden“ klicken. Alternativ „PGN laden“ (Datei oder Text).</p>
         <p>2. „TV-Fenster öffnen“ klicken, das neue Fenster auf den Fernseher ziehen und dort doppelklicken (Vollbild).</p>
         <p>3. Hier mit ← → durch die Partie gehen. Der Fernseher zeigt nur das Brett – Züge, Kommentare und Engine bleiben hier.</p>
       </div>`;
@@ -1811,16 +1820,47 @@ else {
   $('#gameSel').onchange = e => selectGame(+e.target.value, { keepOrientation: true });
   $('#pgnBtn').onclick = () => { $('#pgnText').value = ''; $('#pgnDialog').showModal(); $('#pgnText').focus(); };
   $('#pgnCancel').onclick = () => $('#pgnDialog').close();
-  $('#pgnOk').onclick = () => {
-    const t = $('#pgnText').value;
-    if (loadPgn(t)) {
-      $('#pgnDialog').close();
-      $('#src').value = '';     // Lichess-Link gehört nicht mehr zur geladenen Partie
-      updateLoadBtn();
-      saveSession();
-      showMsg('PGN geladen.', 'ok');
+  function afterPgnLoad(what) {
+    if ($('#pgnDialog').open) $('#pgnDialog').close();
+    $('#src').value = '';     // Lichess-Link gehört nicht mehr zur geladenen Partie
+    updateLoadBtn();
+    saveSession();
+    const n = S.games.length;
+    showMsg(`${what} geladen${n > 1 ? ` – ${n} Partien, Auswahl oben in der Liste` : ''}.`, 'ok');
+  }
+  $('#pgnOk').onclick = () => { if (loadPgn($('#pgnText').value)) afterPgnLoad('PGN'); };
+
+  // PGN aus einer Datei: Knopf im Dialog oder Datei ins Fenster ziehen
+  async function readPgnFile(file) {
+    if (file.size > 20 * 1024 * 1024) throw new Error('Die Datei ist zu groß (über 20 MB).');
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    // meist UTF-8; ältere Dateien (z. B. aus ChessBase) sind oft Windows-1252
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
+    catch { return new TextDecoder('windows-1252').decode(bytes); }
+  }
+  async function loadPgnFile(file) {
+    try {
+      const text = await readPgnFile(file);
+      if (loadPgn(text)) afterPgnLoad(`„${file.name}“`);
+    } catch (err) {
+      showMsg('Die Datei konnte nicht gelesen werden: ' + err.message, 'err');
     }
-  };
+  }
+  $('#pgnFileBtn').onclick = () => $('#pgnFile').click();
+  $('#pgnFile').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) loadPgnFile(f); };
+  let dragDepth = 0;
+  const hasFiles = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+  document.addEventListener('dragenter', e => { if (!hasFiles(e)) return; dragDepth++; document.body.classList.add('dropping'); });
+  document.addEventListener('dragleave', e => { if (!hasFiles(e)) return; if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('dropping'); } });
+  document.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
+  document.addEventListener('drop', e => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    dragDepth = 0;
+    document.body.classList.remove('dropping');
+    const f = e.dataTransfer.files[0];
+    if (f) loadPgnFile(f);
+  });
   $('#noteText').addEventListener('input', onNoteInput);
   $('#noteText').addEventListener('keydown', e => { if (e.key === 'Escape') e.target.blur(); });
   for (const b of document.querySelectorAll('#nagRow .nagbtn')) b.onclick = () => toggleNag(+b.dataset.nag);
