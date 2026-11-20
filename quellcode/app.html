@@ -537,7 +537,7 @@ function esc(s) {
 }
 const store = {
   get(k, d) { try { const v = localStorage.getItem('sp.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { localStorage.setItem('sp.' + k, JSON.stringify(v)); } catch { /* egal */ } },
+  set(k, v) { try { localStorage.setItem('sp.' + k, JSON.stringify(v)); } catch { /* Speichern nicht möglich (z. B. privates Fenster) – SilentBoard läuft trotzdem weiter */ } },
 };
 let bc = null;
 try { bc = new BroadcastChannel(APP); } catch { bc = null; }
@@ -662,7 +662,7 @@ if (IS_TV) {
 
   function send(msg) {
     msg.app = APP;
-    try { if (window.opener && !window.opener.closed) { window.opener.postMessage(msg, MSG_TARGET); return; } } catch { /* weiter */ }
+    try { if (window.opener && !window.opener.closed) { window.opener.postMessage(msg, MSG_TARGET); return; } } catch { /* Trainer-Fenster nicht erreichbar – stattdessen BroadcastChannel versuchen */ }
     if (bc) bc.postMessage(msg);
   }
   const hello = () => send({ type: 'hello' });
@@ -833,9 +833,9 @@ else {
   const DE_PIECE = { S: 'N', L: 'B', T: 'R', D: 'Q' };
   function tryMove(chess, san) {
     san = san.replace(/^0-0-0/, 'O-O-O').replace(/^0-0/, 'O-O');
-    try { const m = chess.move(san); if (m) return m; } catch { /* nächster Versuch */ }
+    try { const m = chess.move(san); if (m) return m; } catch { /* kein gültiger Zug in englischer Notation – deutsche Notation versuchen */ }
     const de = san.replace(/^[SLTD]/, c => DE_PIECE[c]).replace(/=([SLTD])/, (_, c) => '=' + DE_PIECE[c]);
-    if (de !== san) { try { const m = chess.move(de); if (m) return m; } catch { /* ungültig */ } }
+    if (de !== san) { try { const m = chess.move(de); if (m) return m; } catch { /* auch in deutscher Notation kein gültiger Zug */ } }
     return null;
   }
 
@@ -1559,7 +1559,7 @@ else {
   }
   function send(msg) {
     msg.app = APP;
-    if (tvWin && !tvWin.closed) { try { tvWin.postMessage(msg, MSG_TARGET); } catch { /* Fenster weg */ } }
+    if (tvWin && !tvWin.closed) { try { tvWin.postMessage(msg, MSG_TARGET); } catch { /* TV-Fenster wurde geschlossen */ } }
     if (bc) bc.postMessage(msg);
   }
   function syncTv() {
