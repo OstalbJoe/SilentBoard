@@ -1,4 +1,9 @@
-<p align="center"><img src="logo/silentboard-logo.svg" alt="SilentBoard" width="420"></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="logo/silentboard-logo-dunkel.svg">
+    <img src="logo/silentboard-logo.svg" alt="SilentBoard" width="420">
+  </picture>
+</p>
 
 # SilentBoard
 
@@ -32,7 +37,7 @@ Voraussetzung: [Node.js](https://nodejs.org) (ab Version 18) und Python 3 für d
 | `quellcode/entry.js` | bündelt chessground und chess.js |
 | `quellcode/build.mjs` | setzt alles zu einer Datei bzw. zur Web-App zusammen |
 | `quellcode/pwa/` | Manifest, Service Worker und `.htaccess` der Web-App |
-| `logo/` | Logo und App-Symbole |
+| `logo/` | Logo (hell und dunkel) und App-Symbole |
 | `werkzeuge/` | Testserver, App-Symbol für Ubuntu (Chromium aus dem Snap-Store) |
 
 ### Web-App veröffentlichen
