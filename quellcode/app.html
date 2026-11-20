@@ -123,7 +123,6 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .nav button { flex: none; width: 44px; height: 38px; font-size: 18px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
 .nav .gap { margin-left: 22px; }  /* Abstand, damit man nicht versehentlich trifft */
 .nav .grow { flex: 1; }
-.nav .keys { font-size: 12px; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .side { flex: 1 1 auto; min-width: 340px; display: flex; flex-direction: column; gap: 10px; min-height: 0; container-type: inline-size; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
@@ -340,7 +339,6 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
         <button id="bDel" class="gap" title="Eigenen Zug samt Fortsetzung löschen (Entf)" aria-label="Eigenen Zug löschen" disabled>✕</button>
         <span class="grow"></span>
         <span class="frozen-banner" id="frozenBanner" hidden title="Die Teilnehmer sehen weiterhin die alte Stellung. P drücken zum Freigeben.">❄ TV eingefroren</span>
-        <span class="keys" id="keysHint">← → Züge · F drehen · P TV einfrieren · E Engine · ? Hilfe</span>
       </div>
     </div>
 
@@ -1556,7 +1554,6 @@ else {
     $('#tvShows').textContent = (t.lastMoveText ? `Stellung nach ${t.lastMoveText}` : 'Ausgangsstellung') + ` · ${status}`;
     $('#tvBox').classList.toggle('frozen', S.frozen);
     $('#frozenBanner').hidden = !S.frozen;
-    $('#keysHint').hidden = S.frozen;
     $('#boardHolder').classList.toggle('frozen', S.frozen);
     $('#freezeBtn').classList.toggle('on', S.frozen);
     $('#freezeBtn').textContent = S.frozen ? '▶ TV wieder freigeben' : '❄ TV einfrieren';
