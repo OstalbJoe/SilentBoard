@@ -132,7 +132,9 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .nav .seg button { width: 46px; border: 0; border-radius: 0; background: transparent; }
 .nav .seg button + button { border-left: 1px solid var(--line); }
 .nav .seg button:hover:not(:disabled) { background: var(--panel); }
-.nav .seg button.main { width: 64px; background: var(--accent); color: var(--accent-text); }
+/* Zurück und Weiter breit, damit man nicht versehentlich den Nachbarknopf trifft */
+.nav .seg button.wide { width: 76px; }
+.nav .seg button.main { width: 76px; background: var(--accent); color: var(--accent-text); }
 .nav .seg button.main:hover:not(:disabled) { background: var(--accent); filter: brightness(1.1); }
 .nav .seg button.main:disabled { background: var(--panel-2); color: var(--muted); }
 /* Werkzeuge: abgesetzt durch Trennlinie, ruhiger Stil */
@@ -366,7 +368,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
       <div class="nav" id="nav">
         <div class="seg" role="group" aria-label="Durch die Partie gehen">
           <button id="bFirst" title="Zum Anfang (↑ / Pos1)" aria-label="Zum Anfang"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14"/><path d="M18 6l-6 6 6 6"/></svg></button>
-          <button id="bPrev" title="Zug zurück (←)" aria-label="Zug zurück"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <button id="bPrev" class="wide" title="Zug zurück (←)" aria-label="Zug zurück"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
           <button id="bNext" class="main" title="Nächster Zug (→ / Leertaste)" aria-label="Nächster Zug"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
           <button id="bLast" title="Zum Ende (↓ / Ende)" aria-label="Zum Ende"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14"/><path d="M6 6l6 6-6 6"/></svg></button>
         </div>
