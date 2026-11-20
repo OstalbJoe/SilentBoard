@@ -1630,6 +1630,8 @@ else {
   /* Engine (Stockfish 19 lite, läuft nur in diesem Fenster)            */
   /* ------------------------------------------------------------------ */
   const MAX_DEPTH = 22;
+  const BAR_MIN_DEPTH = 10;   // ab dieser Rechentiefe darf der Bewertungsbalken sich bewegen …
+  const BAR_MAX_WAIT = 900;   // … spätestens aber nach so vielen Millisekunden
   const Engine = {
     worker: null, ready: false, searching: false, stopping: false,
     pending: null, fen: null, lines: [], depth: 0, failed: false, optDirty: true, over: null,
@@ -1670,7 +1672,7 @@ else {
       const fen = this.pending;
       this.pending = null;
       if (this.optDirty) { this.post('setoption name MultiPV value ' + settings.engLines); this.optDirty = false; }
-      this.fen = fen; this.lines = []; this.depth = 0;
+      this.fen = fen; this.lines = []; this.depth = 0; this.startedAt = Date.now();
       this.searching = true; this.stopping = false;
       this.post('position fen ' + fen);
       this.post('go depth ' + MAX_DEPTH);
@@ -1782,14 +1784,20 @@ else {
       });
       if (!lines.length) pvs.innerHTML = '<div class="hint">rechnet …</div>';
     }
-    // Bewertungsbalken: Engine, sonst Lichess-Analyse aus der PGN
-    let wc = null;
-    if (barLine) wc = winChance(barLine);
-    else if (S.cur && S.cur.eval != null) {
+    // Bewertungsbalken: Engine, sonst Lichess-Analyse aus der PGN.
+    // Nach einem Zug rechnet die Engine neu; die ersten Werte (geringe Tiefe) schwanken stark.
+    // Darum bleibt der Balken stehen, bis die neue Bewertung belastbar ist.
+    let wc;   // undefined = Balken unverändert lassen
+    if (settings.engOn && !Engine.failed) {
+      const reliable = barLine && (
+        barLine.mate != null || Engine.over || !Engine.searching ||
+        (barLine.depth || 0) >= BAR_MIN_DEPTH || Date.now() - (Engine.startedAt || 0) > BAR_MAX_WAIT);
+      if (reliable) wc = winChance(barLine);
+    } else if (S.cur && S.cur.eval != null) {
       const e = S.cur.eval;
       wc = /^#/.test(e) ? (e.includes('-') ? -1 : 1) : winChance({ cp: parseFloat(e) * 100 });
-    }
-    $('#evalW').style.height = (wc == null ? 50 : 50 + 50 * wc) + '%';
+    } else wc = null;
+    if (wc !== undefined) $('#evalW').style.height = (wc == null ? 50 : 50 + 50 * wc) + '%';
   }
 
   /* ------------------------------------------------------------------ */
