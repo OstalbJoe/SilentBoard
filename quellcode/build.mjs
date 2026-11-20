@@ -21,7 +21,7 @@ function build({ pwa }) {
   let html = fs.readFileSync('app.html', 'utf8');
   const put = (k, v) => { if (!html.includes(k)) throw new Error('fehlt: ' + k); html = html.split(k).join(v); };
   put('/*@@CG_CSS@@*/', css);
-  put('<!--@@LIBS@@-->', '<script>\n/* chessground 9.2.1 (GPL-3.0-or-later, lichess.org) + chess.js 1.4.0 (BSD-2-Clause, Jeff Hlywa) – Lizenzen: siehe Dialog „Lizenzen“ */\n' + libs + '\n</script>');
+  put('<!--@@LIBS@@-->', '<script>\n/* chessground 9.2.1 (GPL-3.0-or-later, lichess.org) + chess.js 1.4.0 (BSD-2-Clause, Jeff Hlywa) – Lizenzen: siehe Dialog „Lizenz & Info“ */\n' + libs + '\n</script>');
   put('@@ICON@@', svg64('../logo/silentboard-icon.svg'));
   put('@@LOGO@@', svg64('../logo/silentboard-logo.svg'));
   put('@@CHESSJS_LICENSE@@', esc(fs.readFileSync(nm + 'chess.js/LICENSE', 'utf8')));

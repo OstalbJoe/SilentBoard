@@ -6,7 +6,6 @@ node_modules/
 /web/
 quellcode/libs.js
 
-# Lokale Dateien, nicht für das Repo
-/SilentBoard-Collage.png
+# Sonstiges
 *.log
 .DS_Store
