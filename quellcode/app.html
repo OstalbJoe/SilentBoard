@@ -119,9 +119,26 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
   padding: 5px 10px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
 }
 .board-holder.frozen { outline: 4px solid var(--warn); outline-offset: 2px; border-radius: 2px; }
-.nav { display: flex; gap: 6px; align-items: center; }
-.nav button { flex: none; width: 44px; height: 38px; font-size: 18px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
-.nav .gap { margin-left: 22px; }  /* Abstand zu den Navigationsknöpfen */
+.nav { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+.nav .seg, .nav .tools { flex: none; }
+.nav button { flex: none; height: 40px; padding: 0; display: inline-flex; align-items: center; justify-content: center; color: var(--text); }
+.nav button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.nav button:disabled { opacity: 1; color: var(--muted); }
+.nav button:disabled svg { opacity: .45; }
+/* Navigation: eine zusammenhängende Leiste, „Nächster Zug“ hervorgehoben */
+.nav .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel-2); }
+.nav .seg button { width: 46px; border: 0; border-radius: 0; background: transparent; }
+.nav .seg button + button { border-left: 1px solid var(--line); }
+.nav .seg button:hover:not(:disabled) { background: var(--panel); }
+.nav .seg button.main { width: 64px; background: var(--accent); color: var(--accent-text); }
+.nav .seg button.main:hover:not(:disabled) { background: var(--accent); filter: brightness(1.1); }
+.nav .seg button.main:disabled { background: var(--panel-2); color: var(--muted); }
+/* Werkzeuge: abgesetzt durch Trennlinie, ruhiger Stil */
+.nav .divider { width: 1px; height: 26px; background: var(--line); }
+.nav .tools { display: inline-flex; gap: 6px; }
+.nav .tools button { width: 40px; background: transparent; border: 1px solid transparent; border-radius: 8px; }
+.nav .tools button:hover:not(:disabled) { background: var(--panel-2); border-color: var(--line); }
+.nav .tools button.danger:hover:not(:disabled) { color: var(--bad); border-color: var(--bad); }
 .nav .grow { flex: 1; }
 
 .side { flex: 1 1 auto; min-width: 340px; display: flex; flex-direction: column; gap: 10px; min-height: 0; container-type: inline-size; }
@@ -137,8 +154,8 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .side-grid > * { min-width: 0; }
 .side { overflow: hidden; }
 .pv { min-width: 0; }
-@container (min-width: 720px) {
-  .side-grid { grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr); grid-template-rows: auto auto 1fr auto; }
+@container (min-width: 600px) {
+  .side-grid { grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr); grid-template-rows: auto auto minmax(min-content, 1fr) auto; }
   .side-grid > .moves { grid-column: 1; grid-row: 1 / span 4; }
   .side-grid > .engine { grid-column: 2; grid-row: 1; }
   .side-grid > .next { grid-column: 2; grid-row: 2; }
@@ -172,7 +189,7 @@ select.mini { padding: 1px 4px; border-radius: 4px; border: 1px solid var(--line
 .next .cm { color: var(--comment); font-size: 13px; }
 .next .pgn-eval { color: var(--muted); font-size: 13px; }
 
-.notes { padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+.notes { padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; }
 .notes .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); display: flex; align-items: center; gap: 8px; }
 .notes .lbl .where { text-transform: none; letter-spacing: 0; color: var(--text); font-weight: 600; font-size: 13px; }
 .notes textarea {
@@ -182,7 +199,8 @@ select.mini { padding: 1px 4px; border-radius: 4px; border: 1px solid var(--line
 .notes textarea:focus { outline: none; border-color: var(--accent); }
 .notes textarea:disabled { opacity: .5; }
 .notes .row { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-.notes .nagbtn { min-width: 34px; padding: 3px 6px; font-weight: 700; font-size: 14px; }
+.notes .nagbtn { min-width: 32px; padding: 3px 5px; font-weight: 700; font-size: 14px; }
+.notes #savePgnBtn { padding: 4px 10px; font-size: 13px; }
 .notes .nagbtn.on { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
 .notes .grow { flex: 1; }
 .notes .hint { font-size: 12px; color: var(--muted); }
@@ -224,7 +242,16 @@ select.mini { padding: 1px 4px; border-radius: 4px; border: 1px solid var(--line
 .tvbox .tv-title { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; }
 .tvbox .tv-shows { color: var(--muted); }
 .tvbox label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
-.tvbox .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; }
+.tvbox { position: relative; }
+/* Einstellungen: kleines Fenster, das sich über der TV-Box öffnet */
+.tvbox .opts {
+  position: absolute; right: 8px; bottom: calc(100% + 6px); z-index: 25; width: 300px;
+  display: grid; grid-template-columns: 1fr; gap: 6px; padding: 12px 14px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+.tvbox .opts[hidden] { display: none; }
+.tvbox .opts .set-title { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+#setBtn[aria-expanded="true"] { border-color: var(--accent); }
 .tvbox .row { display: flex; gap: 6px; flex-wrap: wrap; }
 .tvbox button { font-size: 13px; padding: 4px 10px; }
 #freezeBtn.on { background: var(--warn); border-color: var(--warn); color: #1b1300; }
@@ -336,13 +363,18 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
         </div>
       </div>
       <div class="nav" id="nav">
-        <button id="bFirst" title="Zum Anfang (↑ / Pos1)">⏮</button>
-        <button id="bPrev" title="Zug zurück (←)">◀</button>
-        <button id="bNext" title="Nächster Zug (→ / Leertaste)">▶</button>
-        <button id="bLast" title="Zum Ende (↓ / Ende)">⏭</button>
-        <button id="bFlip" class="gap" title="Brett drehen (F)" aria-label="Brett drehen">⇅</button>
-        <button id="bMain" class="gap" title="Diese Variante zur Hauptvariante machen (H)" aria-label="Zur Hauptvariante machen" disabled>⤒</button>
-        <button id="bDel" class="gap" title="Eigenen Zug samt Fortsetzung löschen (Entf)" aria-label="Eigenen Zug löschen" disabled>✕</button>
+        <div class="seg" role="group" aria-label="Durch die Partie gehen">
+          <button id="bFirst" title="Zum Anfang (↑ / Pos1)" aria-label="Zum Anfang"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14"/><path d="M18 6l-6 6 6 6"/></svg></button>
+          <button id="bPrev" title="Zug zurück (←)" aria-label="Zug zurück"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <button id="bNext" class="main" title="Nächster Zug (→ / Leertaste)" aria-label="Nächster Zug"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+          <button id="bLast" title="Zum Ende (↓ / Ende)" aria-label="Zum Ende"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14"/><path d="M6 6l6 6-6 6"/></svg></button>
+        </div>
+        <span class="divider" aria-hidden="true"></span>
+        <div class="tools" role="group" aria-label="Werkzeuge">
+          <button id="bFlip" title="Brett drehen (F)" aria-label="Brett drehen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 20V5"/><path d="M4 9l4-4 4 4"/><path d="M16 4v15"/><path d="M12 15l4 4 4-4"/></svg></button>
+          <button id="bMain" title="Diese Variante zur Hauptvariante machen (H)" aria-label="Zur Hauptvariante machen" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14"/><path d="M12 20V8"/><path d="M7 13l5-5 5 5"/></svg></button>
+          <button id="bDel" class="danger" title="Eigenen Zug samt Fortsetzung löschen (Entf)" aria-label="Eigenen Zug löschen" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/></svg></button>
+        </div>
         <span class="grow"></span>
         <span class="frozen-banner" id="frozenBanner" hidden title="Die Teilnehmer sehen weiterhin die alte Stellung. P drücken zum Freigeben.">❄ TV eingefroren</span>
       </div>
@@ -397,8 +429,10 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
             <div class="tv-shows" id="tvShows">–</div>
             <div class="row">
               <button id="freezeBtn" title="TV behält die aktuelle Stellung, während du hier weiterklickst (P)">❄ TV einfrieren</button>
+              <button id="setBtn" aria-expanded="false" aria-controls="setPanel" title="Was der Fernseher zeigt, Pfeile und Notation">⚙ Einstellungen</button>
             </div>
-            <div class="opts">
+            <div class="opts" id="setPanel" hidden>
+              <div class="set-title">Einstellungen</div>
               <label><input type="checkbox" data-opt="tvNames"> Spielernamen</label>
               <label><input type="checkbox" data-opt="tvTurn"> Wer am Zug ist</label>
               <label><input type="checkbox" data-opt="tvLast"> Letzter Zug</label>
@@ -1896,6 +1930,13 @@ else {
   $('#noteText').addEventListener('keydown', e => { if (e.key === 'Escape') e.target.blur(); });
   for (const b of document.querySelectorAll('#nagRow .nagbtn')) b.onclick = () => toggleNag(+b.dataset.nag);
   $('#savePgnBtn').onclick = savePgn;
+  function setPanel(open) {
+    $('#setPanel').hidden = !open;
+    $('#setBtn').setAttribute('aria-expanded', String(open));
+  }
+  $('#setBtn').onclick = e => { e.stopPropagation(); setPanel($('#setPanel').hidden); };
+  document.addEventListener('click', e => { if (!$('#setPanel').hidden && !e.target.closest('#setPanel')) setPanel(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#setPanel').hidden) setPanel(false); });
   $('#pgnSaveTop').onclick = savePgn;
   $('#helpBtn').onclick = () => $('#helpDialog').showModal();
   $('#helpClose').onclick = () => $('#helpDialog').close();
