@@ -1018,7 +1018,7 @@ else {
         ? 'Keine Verbindung zu Lichess. Ohne Internet: in Lichess PGN kopieren und über „PGN einfügen“ laden.'
         : e.message, 'err');
     } finally {
-      $('#loadBtn').disabled = false;
+      updateLoadBtn();
     }
   }
 
@@ -1807,13 +1807,22 @@ else {
   $('#freezeBtn').onclick = toggleFreeze;
   $('#tvBtn').onclick = openTv;
   $('#loadBtn').onclick = loadFromInput;
-  $('#src').addEventListener('keydown', e => { if (e.key === 'Enter') loadFromInput(); });
+  // „Laden“ nur aktiv, wenn im Link-Feld etwas steht
+  function updateLoadBtn() { $('#loadBtn').disabled = !$('#src').value.trim(); }
+  $('#src').addEventListener('input', updateLoadBtn);
+  $('#src').addEventListener('keydown', e => { if (e.key === 'Enter' && $('#src').value.trim()) loadFromInput(); });
   $('#gameSel').onchange = e => selectGame(+e.target.value, { keepOrientation: true });
   $('#pgnBtn').onclick = () => { $('#pgnText').value = ''; $('#pgnDialog').showModal(); $('#pgnText').focus(); };
   $('#pgnCancel').onclick = () => $('#pgnDialog').close();
   $('#pgnOk').onclick = () => {
     const t = $('#pgnText').value;
-    if (loadPgn(t)) { $('#pgnDialog').close(); showMsg('PGN geladen.', 'ok'); }
+    if (loadPgn(t)) {
+      $('#pgnDialog').close();
+      $('#src').value = '';     // Lichess-Link gehört nicht mehr zur geladenen Partie
+      updateLoadBtn();
+      saveSession();
+      showMsg('PGN geladen.', 'ok');
+    }
   };
   $('#noteText').addEventListener('input', onNoteInput);
   $('#noteText').addEventListener('keydown', e => { if (e.key === 'Escape') e.target.blur(); });
@@ -1871,10 +1880,12 @@ else {
         fillGameSelect();
         selectGame(saved.gameIdx, { tree: saved.tree, path: saved.path, orientation: saved.orientation });
         $('#src').value = saved.src || '';
+        updateLoadBtn();
         restored = true;
       }
     } catch (err) { console.error(err); }
   }
+  updateLoadBtn();
   if (!restored) {
     S.games = [{ headers: {}, toks: [] }];
     S.headers = {};
