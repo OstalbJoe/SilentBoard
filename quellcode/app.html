@@ -341,6 +341,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
         <button id="bNext" title="Nächster Zug (→ / Leertaste)">▶</button>
         <button id="bLast" title="Zum Ende (↓ / Ende)">⏭</button>
         <button id="bFlip" class="gap" title="Brett drehen (F)" aria-label="Brett drehen">⇅</button>
+        <button id="bMain" class="gap" title="Diese Variante zur Hauptvariante machen (H)" aria-label="Zur Hauptvariante machen" disabled>⤒</button>
         <button id="bDel" class="gap" title="Eigenen Zug samt Fortsetzung löschen (Entf)" aria-label="Eigenen Zug löschen" disabled>✕</button>
         <span class="grow"></span>
         <span class="frozen-banner" id="frozenBanner" hidden title="Die Teilnehmer sehen weiterhin die alte Stellung. P drücken zum Freigeben.">❄ TV eingefroren</span>
@@ -476,6 +477,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
       <kbd>F</kbd><span>Brett drehen (gilt auch für den TV)</span>
       <kbd>P</kbd><span>TV einfrieren / wieder freigeben – zum heimlichen Vorausschauen</span>
       <kbd>E</kbd><span>Engine an/aus</span>
+      <kbd>H</kbd><span>Variante, in der du gerade bist, zur Hauptvariante machen (die alte Hauptfortsetzung bleibt als Variante erhalten)</span>
       <kbd>Entf</kbd><span>eigenen (lila) Zug samt Fortsetzung löschen</span>
       <kbd>Esc</kbd><span>Kommentarfeld verlassen – danach gehen die Pfeiltasten wieder durch die Partie</span>
       <kbd>Rechtsklick</kbd><span>Pfeil ziehen bzw. Feld markieren (Shift = rot, Alt = blau, Shift+Alt = gelb). Geht auf den TV, wenn „Meine Pfeile“ an ist.</span>
@@ -1175,6 +1177,24 @@ else {
   const first = () => goTo(S.root);
   const last = () => { let n = S.cur; while (n.children[0]) n = n.children[0]; goTo(n); };
   function flip() { S.orientation = S.orientation === 'white' ? 'black' : 'white'; render(); }
+  // Liegt der Zug in einer Nebenvariante (irgendwo auf dem Weg vom Anfang)?
+  function inVariation(n) {
+    for (; n.parent; n = n.parent) if (n.parent.children[0] !== n) return true;
+    return false;
+  }
+  // Macht die Zugfolge bis zum aktuellen Zug zur Hauptvariante – auf allen Ebenen.
+  // Die bisherige Hauptfortsetzung bleibt als Nebenvariante erhalten.
+  function promoteToMain() {
+    let changed = false;
+    for (let n = S.cur; n.parent; n = n.parent) {
+      const sib = n.parent.children, i = sib.indexOf(n);
+      if (i > 0) { sib.splice(i, 1); sib.unshift(n); changed = true; }
+    }
+    if (!changed) return;
+    S.treeDirty = true;
+    render();
+    showMsg('Variante ist jetzt die Hauptvariante. „PGN speichern“ übernimmt die neue Reihenfolge.', 'ok');
+  }
   function delAdded() {
     const n = S.cur;
     if (!n.added || !n.parent) return;
@@ -1220,6 +1240,7 @@ else {
     $('#bPrev').disabled = $('#bFirst').disabled = !n.parent;
     $('#bNext').disabled = $('#bLast').disabled = !n.children.length;
     $('#bDel').disabled = !n.added;
+    $('#bMain').disabled = !inVariation(n);
 
     // Engine
     if (settings.engOn) {
@@ -1784,6 +1805,7 @@ else {
       case 'p': case 'P': toggleFreeze(); break;
       case 'e': case 'E': toggleEngine(); break;
       case 'Delete': delAdded(); break;
+      case 'h': case 'H': promoteToMain(); break;
       case '?': $('#helpDialog').showModal(); break;
       default: return false;
     }
@@ -1810,6 +1832,7 @@ else {
   $('#bLast').onclick = last;
   $('#bFlip').onclick = flip;
   $('#bDel').onclick = delAdded;
+  $('#bMain').onclick = promoteToMain;
   $('#freezeBtn').onclick = toggleFreeze;
   $('#tvBtn').onclick = openTv;
   $('#loadBtn').onclick = loadFromInput;
