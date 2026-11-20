@@ -54,7 +54,7 @@ fs.writeFileSync(out + 'sw.js', fs.readFileSync('pwa/sw.js', 'utf8').replace('@@
 for (const f of ['icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png']) fs.copyFileSync('../logo/' + f, out + 'icons/' + f);
 fs.copyFileSync('../logo/silentboard-icon.svg', out + 'icons/icon.svg');
 // Quellcode zum Herunterladen (GPL: wer die App bekommt, muss an den Quellcode kommen)
-execSync(`cd .. && zip -qr web/silentboard/quellcode.zip LICENSE README.md SECURITY.md package.json .gitignore logo quellcode werkzeuge -x "quellcode/node_modules/*" "quellcode/libs.js"`);
+execSync(`cd .. && zip -qrX web/silentboard/quellcode.zip LICENSE README.md SECURITY.md package.json .gitignore logo quellcode werkzeuge -x "quellcode/node_modules/*" "quellcode/libs.js"`);
 console.log('ok  web/silentboard/ (Version ' + version + ')');
 
 fs.rmSync('libs.js', { force: true }); // Zwischendatei aufräumen
