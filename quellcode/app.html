@@ -502,7 +502,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
     <button id="tvBtn" class="tv-btn" title="Öffnet ein zweites Fenster nur mit dem Brett – auf den Fernseher ziehen"><span class="dot" id="tvDot"></span><span id="tvBtnText">TV-Fenster öffnen</span></button>
     <button id="helpBtn" title="Tastenkürzel">?</button>
     <button id="licBtn" title="Lizenz, Haftung, Datenschutz und Quellcode">Lizenz &amp; Info</button>
-    <button id="quitBtn" hidden title="SilentBoard beenden – auch eine offene Spielrunde wird geschlossen">⏻ Beenden</button>
+    <button id="quitBtn" hidden title="SilentBoard beenden – auch ein offener Raum wird geschlossen">⏻ Beenden</button>
     <div id="msg" class="msg" hidden></div>
   </header>
 
@@ -662,7 +662,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
       gespeichert. Nur beim Laden eines Lichess-Links verbindet sich SilentBoard mit lichess.org; dabei erhält Lichess wie bei jedem
       Seitenaufruf deine IP-Adresse.</p>
     <p><b>Quiz:</b> Die Namen und Züge der Spieler bleiben auf diesem Rechner und gehen nicht ins Internet. Sie werden gelöscht,
-      wenn die Spielrunde geschlossen oder SilentBoard beendet wird. Ein Vorname oder Spitzname genügt.</p>
+      wenn der Raum geschlossen oder SilentBoard beendet wird. Ein Vorname oder Spitzname genügt.</p>
     <h4>Enthaltene Fremdkomponenten</h4>
     <table>
       <tr><th>Komponente</th><th>Urheber</th><th>Lizenz</th></tr>
@@ -699,7 +699,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
     <h3 style="margin-top:14px">Quiz</h3>
     <p>Oben rechts „Modus: Quiz“ wählen – die Spieler raten dann den nächsten Zug auf dem Handy:</p>
     <ol style="margin:0 0 8px 18px;padding:0;font-size:14px">
-      <li>„Spielrunde öffnen“ – erst jetzt ist SilentBoard im WLAN für Handys erreichbar. Der Fernseher zeigt QR-Code und Raum-Code.
+      <li>„Raum öffnen“ – erst jetzt ist SilentBoard im WLAN für Handys erreichbar. Der Fernseher zeigt QR-Code und Raum-Code.
         Unter Windows fragt die Firewall beim ersten Mal nach: „Private Netzwerke“ erlauben.</li>
       <li>Spieler scannen den QR-Code und geben ihren Namen ein. Laptop und Handys müssen im selben WLAN sein.</li>
       <li>Zur gewünschten Stellung gehen und „Zug abfragen“ klicken. Die Spieler tippen ihren Zug und bestätigen ihn.</li>
@@ -711,7 +711,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
     </ol>
     <h3 style="margin-top:14px">Beenden</h3>
     <p>Schließt du den Browser (Trainer-Ansicht und TV-Fenster), beendet sich SilentBoard nach 10 Sekunden von selbst.
-      Ist im Quiz eine Spielrunde offen, fragt der Browser vorher nach, und SilentBoard läuft weiter, damit Spieler und Punkte
+      Ist im Quiz ein Raum offen, fragt der Browser vorher nach, und SilentBoard läuft weiter, damit Spieler und Punkte
       erhalten bleiben – erneut starten holt alles zurück. „⏻ Beenden“ oben rechts beendet SilentBoard sofort.</p>
     <p style="margin-top:12px">Das TV-Fenster zeigt nur das Brett. Fenster auf den Fernseher ziehen und dort doppelklicken (oder F11) für Vollbild. Tasten im TV-Fenster werden an dieses Fenster weitergeleitet.</p>
     <div class="row"><button id="helpClose" class="primary">OK</button></div>
@@ -2139,7 +2139,7 @@ else {
   }
   function quizNext() { qsend({ t: 'next' }); QZ.tv = 'board'; }
   function quizClosePool() {
-    if (!confirm('Spielrunde schließen? Alle Spieler werden abgemeldet und die Punkte gelöscht.')) return;
+    if (!confirm('Raum schließen? Alle Spieler werden abgemeldet und die Punkte gelöscht.')) return;
     qsend({ t: 'pool-close' }); QZ.tv = 'lobby';
   }
   function quizRename(id) {
@@ -2150,7 +2150,7 @@ else {
   }
   function quizRemove(id) {
     const p = QZ.st.players.find(x => x.id === id);
-    if (p && confirm(`${p.name} aus der Spielrunde nehmen?`)) qsend({ t: 'remove', id });
+    if (p && confirm(`${p.name} aus dem Raum nehmen?`)) qsend({ t: 'remove', id });
   }
   function setTvView(v) {
     const q = QZ.st && QZ.st.question;
@@ -2177,10 +2177,10 @@ else {
     const left = Math.max(0, Math.ceil((deadline - QZ.offset - Date.now()) / 1000));
     return `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
   }
-  /* ---- Kopfbereich rechts: Modus-Auswahl, „Spielrunde öffnen“, Raum-Code, ⚙ ---- */
+  /* ---- Kopfbereich rechts: Modus-Auswahl, „Raum öffnen“, Raum-Code, ⚙ ---- */
   function settingsHtml(open) {
     const st = QZ.st, url = quizUrl(), addrs = (st && st.pool.addresses) || [];
-    return `${open ? '<div class="t">Spielrunde</div>' : ''}
+    return `${open ? '<div class="t">Raum</div>' : ''}
       <div class="set">
         <span>Zeit pro Frage (Sekunden, 0 = ohne)</span><input type="number" min="0" max="600" step="10" data-set="quizSecs" value="${settings.quizSecs}">
         <span>2 Punkte bis Verlust von (%)</span><input type="number" min="0" max="50" step="1" data-set="quizGood" value="${settings.quizGood}">
@@ -2189,7 +2189,7 @@ else {
       <label class="chk"><input type="checkbox" data-qopt="quizTvNames" ${settings.quizTvNames ? 'checked' : ''}> Namen bei der Lösung auf dem TV zeigen</label>
       ${open ? `<div>Adresse für die Handys:</div>
         <div class="addr">${esc(url || 'kein WLAN gefunden')}${addrs.length > 1 ? ' <button data-act="addr">Netz wechseln</button>' : ''}</div>
-        <button class="danger" data-act="close-pool" title="Alle Handys werden getrennt, die Punkte gelöscht">Spielrunde schließen</button>` : ''}`;
+        <button class="danger" data-act="close-pool" title="Alle Handys werden getrennt, die Punkte gelöscht">Raum schließen</button>` : ''}`;
   }
   function renderQuizHead() {
     const st = QZ.st, head = $('#quizHead');
@@ -2197,14 +2197,14 @@ else {
     if (!QZ.avail) return;
     const open = st && st.pool.open;
     if (settings.mode !== 'quiz') {
-      head.innerHTML = open ? `<button class="badge" data-act="mode-quiz" title="Die Handys sind noch verbunden – zum Quiz wechseln">Spielrunde noch offen · ${st.players.length}</button>` : '';
+      head.innerHTML = open ? `<button class="badge" data-act="mode-quiz" title="Die Handys sind noch verbunden – zum Quiz wechseln">Raum noch offen · ${st.players.length}</button>` : '';
       $('#qzSet').hidden = true;
       return;
     }
     if (!QZ.connected || !st) { head.innerHTML = '<span class="cnt">verbinde …</span>'; return; }
-    if (!open) { head.innerHTML = '<button class="go" data-act="open">Spielrunde öffnen</button>'; $('#qzSet').hidden = true; return; }
+    if (!open) { head.innerHTML = '<button class="go" data-act="open">Raum öffnen</button>'; $('#qzSet').hidden = true; return; }
     head.innerHTML = `<span class="code" title="Raum-Code">${esc(st.pool.code)}</span><span class="cnt">${st.players.length} Spieler</span>
-      <button data-act="gear" title="Einstellungen, Adresse, Spielrunde schließen">⚙</button>`;
+      <button data-act="gear" title="Einstellungen, Adresse, Raum schließen">⚙</button>`;
     if (!$('#qzSet').hidden && !$('#qzSet').contains(document.activeElement)) $('#qzSet').innerHTML = settingsHtml(true);
   }
 
@@ -2245,7 +2245,7 @@ else {
     if (st.finished) {
       bar.push(`<div class="qhead">Quiz beendet <span class="pill ok">${st.rounds} ${st.rounds === 1 ? 'Frage' : 'Fragen'}</span></div>
         <div class="qrow"><button class="qbtn grow" data-act="continue" title="Weiter fragen – die Punkte bleiben erhalten">Weiterspielen</button>
-          <button class="qbtn go grow" data-act="close-pool" title="Alle Handys werden getrennt">Spielrunde schließen</button></div>`);
+          <button class="qbtn go grow" data-act="close-pool" title="Alle Handys werden getrennt">Raum schließen</button></div>`);
       mid.push(`<div class="plist">${st.players.map(p => `<span>${p.rank}.</span><span class="nm">${esc(p.name)}</span><span><b>${p.total}</b></span><span></span>`).join('')}</div>`);
       tv = { cur: QZ.tv === 'lobby' ? 'lobby' : 'final', opts: [['final', 'Endergebnis'], ['lobby', 'QR-Code']] };
     } else if (!q) {
@@ -2350,7 +2350,7 @@ else {
   $('#modeSel').onchange = e => {
     const st = QZ.st;
     if (e.target.value === 'analyse' && st && st.pool.open && st.finished
-      && confirm('Das Quiz ist beendet. Spielrunde jetzt schließen? Die Handys werden getrennt.')) {
+      && confirm('Das Quiz ist beendet. Raum jetzt schließen? Die Handys werden getrennt.')) {
       qsend({ t: 'pool-close' }); QZ.tv = 'lobby';
     }
     setMode(e.target.value);
@@ -2365,12 +2365,12 @@ else {
   $('#quitBtn').hidden = !QZ.avail;
   $('#quitBtn').onclick = () => {
     const open = QZ.st && QZ.st.pool.open;
-    if (!confirm(open ? 'Die Spielrunde ist noch offen. SilentBoard beenden? Alle Spieler werden getrennt und die Punkte gelöscht.' : 'SilentBoard beenden?')) return;
+    if (!confirm(open ? 'Der Raum ist noch offen. SilentBoard beenden? Alle Spieler werden getrennt und die Punkte gelöscht.' : 'SilentBoard beenden?')) return;
     QZ.quit = true;
     try { tvWin && !tvWin.closed && tvWin.close(); } catch { /* TV-Fenster schon zu */ }
     qsend({ t: 'quit' });
   };
-  // Browser schließen bei offener Spielrunde: der Browser fragt nach
+  // Browser schließen bei offenem Raum: der Browser fragt nach
   window.addEventListener('beforeunload', e => {
     if (QZ.avail && !QZ.quit && QZ.st && QZ.st.pool.open) { e.preventDefault(); e.returnValue = ''; }
   });

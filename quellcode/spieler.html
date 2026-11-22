@@ -179,7 +179,7 @@ input:focus { outline: none; border-color: var(--green); }
 
   <!-- Ende -->
   <section class="card" id="vEnd" hidden>
-    <h2>Spielrunde beendet</h2>
+    <h2>Raum geschlossen</h2>
     <p id="endText">Danke fürs Mitspielen!</p>
   </section>
 </div>
@@ -203,7 +203,7 @@ const de = san => (san || '').replace(/[NBRQK]/g, c => PIECE_DE[c]);
 
 let code = params.get('r') || store.get('code') || '';
 let token = store.get('token');
-if (store.get('code') && store.get('code') !== code) token = null;   // neue Spielrunde
+if (store.get('code') && store.get('code') !== code) token = null;   // neuer Raum
 let ws = null, state = null, offset = 0, editing = false, pending = null, qid = null, ended = false, retry = 0;
 let cg = null;
 
@@ -228,9 +228,9 @@ function connect() {
     if (m.t === 'state') { state = m; offset = m.now - Date.now(); $('#me').textContent = m.name; render(); }
   };
   ws.onclose = e => {
-    if (e.code === 4001) return finish('Der Trainer hat dich aus der Spielrunde genommen.');
+    if (e.code === 4001) return finish('Der Trainer hat dich aus dem Raum genommen.');
     if (e.code === 4000) return finish('Du bist auf einem anderen Gerät angemeldet.');
-    if (e.code === 1000 && e.reason) return finish('Die Spielrunde wurde beendet. Danke fürs Mitspielen!');
+    if (e.code === 1000 && e.reason) return finish('Der Raum wurde geschlossen. Danke fürs Mitspielen!');
     $('#net').hidden = false;
     setTimeout(connect, Math.min(5000, 600 * ++retry));
   };
@@ -244,7 +244,7 @@ function onError(err) {
     $('#joinErr').textContent = code ? 'Der Raum-Code stimmt nicht.' : 'Bitte den Raum-Code vom Fernseher eingeben.';
     show('vJoin');
   } else if (err === 'name') { $('#joinErr').textContent = 'Bitte einen Namen eingeben.'; show('vJoin'); }
-  else if (err === 'full') { $('#joinErr').textContent = 'Die Spielrunde ist voll.'; show('vJoin'); }
+  else if (err === 'full') { $('#joinErr').textContent = 'Der Raum ist voll.'; show('vJoin'); }
 }
 
 /* ---------- Anmelden ---------- */

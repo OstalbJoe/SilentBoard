@@ -30,15 +30,15 @@ Die Programmdatei gibt es unter **Releases** in diesem Repository:
 SilentBoard öffnet sich im Browser. Internet wird nur zum Laden von Lichess-Links gebraucht.
 Kurzanleitung: im Programm auf **?** klicken.
 
-**Beenden:** Schließt du den Browser, beendet sich SilentBoard nach 10 Sekunden von selbst. Ist im Quiz eine
-Spielrunde offen, fragt der Browser vorher nach und SilentBoard läuft weiter, damit Spieler und Punkte erhalten
+**Beenden:** Schließt du den Browser, beendet sich SilentBoard nach 10 Sekunden von selbst. Ist im Quiz ein
+Raum offen, fragt der Browser vorher nach und SilentBoard läuft weiter, damit Spieler und Punkte erhalten
 bleiben – erneut starten holt alles zurück. „⏻ Beenden“ oben rechts beendet SilentBoard jederzeit sofort.
 
 Unter Linux legt `bash werkzeuge/linux-menueeintrag.sh /pfad/zu/SilentBoard-linux` einen Eintrag mit Logo in der App-Übersicht an.
 
 ### Quiz
 
-Im Reiter **Quiz** klickt der Trainer „Spielrunde öffnen“. Erst dann ist SilentBoard im WLAN erreichbar; vorher hört
+Der Trainer wählt oben rechts **Modus: Quiz** und klickt „Raum öffnen“. Erst dann ist SilentBoard im WLAN erreichbar; vorher hört
 das Programm nur auf den eigenen Rechner. Die Spieler scannen den QR-Code auf dem Fernseher (Laptop und Handys im
 selben WLAN), der Trainer fragt Stellungen ab, die Engine bewertet jeden abgegebenen Zug:
 
@@ -49,7 +49,7 @@ selben WLAN), der Trainer fragt Stellungen ab, die Engine bewertet jeden abgegeb
 | größerer Verlust, „Weiß nicht“ | 0 |
 
 Die Grenzen sind einstellbar. Wer den Partiezug errät, wird markiert, bekommt dafür aber keine Extrapunkte.
-Unter Windows fragt die Firewall beim ersten Öffnen einer Spielrunde nach – „Private Netzwerke“ erlauben.
+Unter Windows fragt die Firewall beim ersten Öffnen eines Raums nach – „Private Netzwerke“ erlauben.
 
 ## Selbst bauen
 
@@ -63,7 +63,7 @@ Voraussetzung: [Node.js](https://nodejs.org) ab Version 18.
 |---|---|
 | `quellcode/app.html` | Trainer-Ansicht und Fernseher (HTML, CSS, JavaScript) |
 | `quellcode/spieler.html` | Seite für die Handys der Spieler |
-| `quellcode/programm.mjs` | das Programm: lokaler Server, Spielrunde für die Handys |
+| `quellcode/programm.mjs` | das Programm: lokaler Server, Raum für die Handys |
 | `quellcode/entry.js` | bündelt chessground, chess.js und den QR-Code-Erzeuger |
 | `quellcode/build.mjs` | baut die Seiten und die Programmdateien |
 | `logo/` | Logo (hell und dunkel) und App-Symbole (`npm run symbole`) |
@@ -109,6 +109,6 @@ im Browser gespeichert. Nur beim Laden eines Lichess-Links verbindet sich Silent
 dabei erhält Lichess wie bei jedem Seitenaufruf die IP-Adresse.
 
 Im Quiz bleiben die Namen und Züge der Spieler auf dem Rechner des Trainers und gehen nicht ins Internet.
-Sie werden gelöscht, wenn die Spielrunde geschlossen oder SilentBoard beendet wird.
+Sie werden gelöscht, wenn der Raum geschlossen oder SilentBoard beendet wird.
 
 Sicherheitslücken bitte wie in [`SECURITY.md`](SECURITY.md) beschrieben melden.

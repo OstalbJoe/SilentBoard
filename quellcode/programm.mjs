@@ -4,9 +4,9 @@
 // Das SilentBoard-Programm (wird mit Bun zu einer einzigen Programmdatei gebaut).
 //
 // Beim Start lauscht es nur auf diesem Rechner (127.0.0.1) und öffnet SilentBoard im Browser.
-// Von außen ist nichts erreichbar. Erst wenn der Trainer im Quiz „Spielrunde öffnen“ klickt,
+// Von außen ist nichts erreichbar. Erst wenn der Trainer im Quiz „Raum öffnen“ klickt,
 // startet ein zweiter, im WLAN erreichbarer Teil, über den sich die Handys verbinden.
-// „Spielrunde schließen“ beendet ihn wieder.
+// „Raum schließen“ beendet ihn wieder.
 
 import os from 'os';
 import { Chess } from 'chess.js';
@@ -108,7 +108,7 @@ function toAllPlayers() { for (const p of Q.players.values()) toPlayer(p); }
 function broadcast() { toTrainers(); toAllPlayers(); }
 
 /* ------------------------------------------------------------------ */
-/* Spielrunde (WLAN-Server) öffnen und schließen                       */
+/* Raum (WLAN-Server) öffnen und schließen                            */
 /* ------------------------------------------------------------------ */
 function openPool() {
   if (Q.pool) return;
@@ -144,18 +144,18 @@ function openPool() {
       break;
     } catch { /* Port belegt – nächsten versuchen */ }
   }
-  if (!Q.pool) throw new Error('Kein freier Port für die Spielrunde gefunden.');
-  log(`Spielrunde geöffnet – Raum ${Q.code}, erreichbar unter: ${lanAddresses().map(a => `http://${a.ip}:${Q.poolPort}`).join(', ') || '(kein WLAN gefunden)'}`);
+  if (!Q.pool) throw new Error('Kein freier Port für den Raum gefunden.');
+  log(`Raum ${Q.code} geöffnet – erreichbar unter: ${lanAddresses().map(a => `http://${a.ip}:${Q.poolPort}`).join(', ') || '(kein WLAN gefunden)'}`);
 }
 function closePool() {
   if (!Q.pool) return;
-  for (const p of Q.players.values()) { try { p.ws && p.ws.close(1000, 'Spielrunde beendet'); } catch { /* schon zu */ } }
+  for (const p of Q.players.values()) { try { p.ws && p.ws.close(1000, 'Raum geschlossen'); } catch { /* schon zu */ } }
   Q.pool.stop(true);
   Q.pool = null;
   Q.players.clear(); Q.byToken.clear();
   Q.question = null; Q.history = []; Q.finished = false;
   clearTimeout(closeTimer);
-  log('Spielrunde geschlossen.');
+  log('Raum geschlossen.');
 }
 
 /* ------------------------------------------------------------------ */
@@ -335,8 +335,8 @@ function onTrainerMessage(ws, raw) {
 /* ------------------------------------------------------------------ */
 /* ------------------------------------------------------------------ */
 /* Automatisches Beenden                                               */
-/* Ohne Spielrunde gilt: Browser zu = SilentBoard zu. Mit offener      */
-/* Spielrunde läuft es weiter, damit Spieler und Punkte erhalten bleiben. */
+/* Ohne offenen Raum gilt: Browser zu = SilentBoard zu. Mit offenem    */
+/* Raum läuft es weiter, damit Spieler und Punkte erhalten bleiben.    */
 /* ------------------------------------------------------------------ */
 const views = new Set();        // offene TV-Fenster (Trainer-Fenster stehen in Q.trainers)
 const EXIT_GRACE = 10_000;      // so lange warten, damit ein Neuladen (F5) nichts beendet
@@ -348,7 +348,7 @@ function checkAutoExit() {
   clearTimeout(exitTimer); exitTimer = null;
   if (windowCount() > 0 || !everOpened) return;
   if (Q.pool) {
-    log('Alle SilentBoard-Fenster sind zu, die Spielrunde ist aber offen – SilentBoard läuft weiter. Erneut starten holt alles zurück.');
+    log('Alle SilentBoard-Fenster sind zu, der Raum ist aber offen – SilentBoard läuft weiter. Erneut starten holt alles zurück.');
     return;
   }
   log(`Kein SilentBoard-Fenster mehr offen – SilentBoard beendet sich in ${EXIT_GRACE / 1000} Sekunden …`);
@@ -429,7 +429,7 @@ async function main() {
   console.log(`  Im Browser: ${url}`);
   console.log('');
   console.log('  Schließt du den Browser, beendet sich SilentBoard von selbst.');
-  console.log('  Ist im Quiz eine Spielrunde offen, läuft es weiter, bis du sie schließt.');
+  console.log('  Ist im Quiz ein Raum offen, läuft es weiter, bis du ihn schließt.');
   console.log('  Dieses Fenster zu schließen beendet SilentBoard sofort.');
   console.log('');
   if (!process.env.SB_NO_BROWSER) openBrowser(url);
