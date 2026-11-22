@@ -2197,7 +2197,7 @@ else {
     if (!QZ.avail) return;
     const open = st && st.pool.open;
     if (settings.mode !== 'quiz') {
-      head.innerHTML = open ? `<button class="badge" data-act="mode-quiz" title="Zum Quiz wechseln">Spielrunde offen · ${st.players.length}</button>` : '';
+      head.innerHTML = open ? `<button class="badge" data-act="mode-quiz" title="Die Handys sind noch verbunden – zum Quiz wechseln">Spielrunde noch offen · ${st.players.length}</button>` : '';
       $('#qzSet').hidden = true;
       return;
     }
@@ -2243,8 +2243,9 @@ else {
     let tv = null;   // TV-Umschalter: null = Fernseher folgt der laufenden Frage
     const cancel = '<button class="linkbtn" data-act="cancel" title="Frage verwerfen – abgegebene Züge zählen nicht">Abbrechen (nicht werten)</button>';
     if (st.finished) {
-      bar.push(`<div class="qhead">Quiz beendet <span class="pill ok">${st.rounds} Fragen</span></div>
-        <div class="qrow"><button class="qbtn grow" data-act="continue" title="Weiter fragen – die Punkte bleiben erhalten">Weiterspielen</button></div>`);
+      bar.push(`<div class="qhead">Quiz beendet <span class="pill ok">${st.rounds} ${st.rounds === 1 ? 'Frage' : 'Fragen'}</span></div>
+        <div class="qrow"><button class="qbtn grow" data-act="continue" title="Weiter fragen – die Punkte bleiben erhalten">Weiterspielen</button>
+          <button class="qbtn go grow" data-act="close-pool" title="Alle Handys werden getrennt">Spielrunde schließen</button></div>`);
       mid.push(`<div class="plist">${st.players.map(p => `<span>${p.rank}.</span><span class="nm">${esc(p.name)}</span><span><b>${p.total}</b></span><span></span>`).join('')}</div>`);
       tv = { cur: QZ.tv === 'lobby' ? 'lobby' : 'final', opts: [['final', 'Endergebnis'], ['lobby', 'QR-Code']] };
     } else if (!q) {
@@ -2346,7 +2347,14 @@ else {
     $('#modeSel').value = settings.mode;
     renderQuiz();
   }
-  $('#modeSel').onchange = e => setMode(e.target.value);
+  $('#modeSel').onchange = e => {
+    const st = QZ.st;
+    if (e.target.value === 'analyse' && st && st.pool.open && st.finished
+      && confirm('Das Quiz ist beendet. Spielrunde jetzt schließen? Die Handys werden getrennt.')) {
+      qsend({ t: 'pool-close' }); QZ.tv = 'lobby';
+    }
+    setMode(e.target.value);
+  };
 
   // Häkchen im TV-Kasten auf dem Stand halten, wenn die Einstellung im Quiz geändert wird
   function syncNamesBox() { const c = document.querySelector('#setPanel input[data-opt="quizTvNames"]'); if (c) c.checked = !!settings.quizTvNames; }

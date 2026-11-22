@@ -304,7 +304,7 @@ function onTrainerMessage(ws, raw) {
         if (Q.question && Q.question.status !== 'done') return;
         Q.question = null; clearTimeout(closeTimer);
         Q.finished = true;
-        log(`Quiz beendet nach ${Q.history.length} Fragen.`);
+        log(`Quiz beendet nach ${Q.history.length} ${Q.history.length === 1 ? 'Frage' : 'Fragen'}.`);
         break;
       }
       case 'continue': Q.finished = false; break;
