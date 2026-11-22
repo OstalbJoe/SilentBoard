@@ -13,7 +13,7 @@ import { Chess } from 'chess.js';
 import APP_HTML from '../dist/app.html' with { type: 'text' };
 import SPIELER_HTML from '../dist/spieler.html' with { type: 'text' };
 
-const LOCAL_PORT = 8642;
+const LOCAL_PORT = +process.env.SB_PORT || 8642;   // SB_PORT nur zum Testen neben einem laufenden SilentBoard
 const MAX_PLAYERS = 60;
 const NAME_MAX = 20;
 
@@ -76,6 +76,7 @@ function trainerState() {
     players: standings(),
     question: q && {
       id: q.id, fen: q.fen, side: q.side, deadline: q.deadline, status: q.status, gameUci: q.gameUci,
+      paused: !!q.paused, remaining: q.remaining,
       answers: Object.fromEntries([...q.answers].map(([id, a]) => [id, a])),
       results: q.results || null,
     },
@@ -92,6 +93,7 @@ function playerState(p) {
   const base = { t: 'state', now: Date.now(), name: p.name, total: p.total, rank: st ? st.rank : null, of: Q.players.size };
   if (!q) return { ...base, phase: 'wait' };
   const a = q.answers.get(p.id) || null;
+  if (q.status === 'open' && q.paused) return { ...base, phase: 'paused', answer: a };
   if (q.status === 'open') return { ...base, phase: 'question', question: { id: q.id, fen: q.fen, side: q.side, deadline: q.deadline }, answer: a };
   if (q.status === 'closed') return { ...base, phase: 'closed', answer: a };
   const r = q.results && q.results.players[p.id];
@@ -179,7 +181,7 @@ function onPlayerMessage(ws, raw) {
   if (!p) return;
   if (m.t === 'answer') {
     const q = Q.question;
-    if (!q || q.status !== 'open' || m.qid !== q.id) return;
+    if (!q || q.status !== 'open' || q.paused || m.qid !== q.id) return;
     if (q.deadline && Date.now() > q.deadline + 1500) return;
     if (m.dontKnow) q.answers.set(p.id, { dontKnow: true, ts: Date.now() });
     else {
@@ -200,7 +202,7 @@ function onPlayerMessage(ws, raw) {
 function closeQuestion() {
   const q = Q.question;
   if (!q || q.status !== 'open') return;
-  q.status = 'closed';
+  q.status = 'closed'; q.paused = false;
   clearTimeout(closeTimer);
   broadcast();
 }
@@ -231,9 +233,31 @@ function onTrainerMessage(ws, raw) {
         const q = Q.question;
         if (!q || q.status !== 'open') return;
         const add = Math.max(5, Math.min(300, +m.seconds || 30)) * 1000;
+        if (q.paused) { if (q.remaining != null) q.remaining += add; break; }
         q.deadline = Math.max(q.deadline || Date.now(), Date.now()) + add;
         clearTimeout(closeTimer);
         closeTimer = setTimeout(closeQuestion, q.deadline - Date.now() + 1200);
+        break;
+      }
+      case 'pause': {
+        // Uhr anhalten (z. B. damit jemand, der rausgeflogen ist, den QR-Code neu scannen kann)
+        const q = Q.question;
+        if (!q || q.status !== 'open' || q.paused) return;
+        q.paused = true;
+        q.remaining = q.deadline ? Math.max(0, q.deadline - Date.now()) : null;
+        q.deadline = null;
+        clearTimeout(closeTimer);
+        break;
+      }
+      case 'resume': {
+        const q = Q.question;
+        if (!q || q.status !== 'open' || !q.paused) return;
+        q.paused = false;
+        if (q.remaining != null) {
+          q.deadline = Date.now() + Math.max(q.remaining, 5000);
+          closeTimer = setTimeout(closeQuestion, q.deadline - Date.now() + 1200);
+        }
+        q.remaining = null;
         break;
       }
       case 'close': closeQuestion(); return;

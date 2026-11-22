@@ -610,6 +610,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
       <li>„Spielrunde öffnen“ – erst jetzt ist SilentBoard im WLAN für Handys erreichbar. Der Fernseher zeigt QR-Code und Raum-Code.</li>
       <li>Spieler scannen den QR-Code und geben ihren Namen ein. Laptop und Handys müssen im selben WLAN sein.</li>
       <li>Zur gewünschten Stellung gehen und „Zug abfragen“ klicken. Die Spieler tippen ihren Zug und bestätigen ihn.</li>
+      <li>„Pause“ hält die Uhr an und zeigt den QR-Code wieder auf dem Fernseher – z. B. wenn jemand rausgeflogen ist. „Weiter“ setzt mit der Restzeit fort.</li>
       <li>„Eingabe schließen“ (oder die Zeit läuft ab) – die Engine bewertet alle Züge: 2 Punkte für einen guten Zug, 1 Punkt für einen kleinen Verlust.</li>
       <li>Auf dem Fernseher Auflösung oder Tabelle zeigen, dann „Fertig – nächste Frage“.</li>
     </ol>
@@ -813,7 +814,7 @@ if (IS_TV) {
   }
   function lobbyHtml(q) {
     const names = (q.names || []).map(n => `<span>${esc(n)}</span>`).join('');
-    return `<img class="logo" src="@@LOGO_DARK@@" alt="SilentBoard">
+    return `${q.paused ? '<h1>Pause – gleich geht’s weiter</h1>' : '<img class="logo" src="@@LOGO_DARK@@" alt="SilentBoard">'}
       <div class="join"><div class="qr">${q.qr || ''}</div>
         <div class="howto">Mitspielen: QR-Code mit dem Handy scannen<br>oder im Browser öffnen:
           <div class="url">${esc(q.url || '')}</div><br>Raum-Code<div class="code">${esc(q.code || '')}</div></div></div>
@@ -1754,7 +1755,7 @@ else {
     if (!quiz) return t;
     const q = QZ.st && QZ.st.question;
     const out = Object.assign({}, t, { quiz });
-    if (q) {
+    if (q && quiz.phase !== 'lobby' && quiz.phase !== 'table') {
       const chess = new Chess(q.fen);
       Object.assign(out, {
         fen: q.fen, orientation: q.side, turn: q.side, lastMove: null, check: chess.inCheck(), result: null,
@@ -1890,6 +1891,10 @@ else {
     const total = st.players.length;
     const answered = q ? Object.keys(q.answers).length : 0;
     const table = () => ({ phase: 'table', rows: st.players.slice(0, 30).map(p => ({ rank: p.rank, name: p.name, total: p.total, last: p.last })) });
+    if (q && q.status === 'open' && q.paused) {
+      const url = quizUrl();
+      return { phase: 'lobby', paused: true, url, code: st.pool.code, qr: url ? quizQr(`${url}/?r=${st.pool.code}`) : '', names: st.players.map(p => p.name) };
+    }
     if (q && q.status === 'open') return { phase: 'question', side: q.side, deadline: q.deadline ? q.deadline - QZ.offset : null, answered, total };
     if (q && q.status === 'closed') return { phase: 'eval', answered, total };
     if (q && q.status === 'done') {
@@ -2077,12 +2082,19 @@ else {
     if (!q) {
       h.push(`<div class="qrow"><span>Fernseher zeigt:</span></div>${tvBtns(QZ.tv)}`);
       h.push(`<button class="qbtn go" data-act="ask">Zug abfragen (aktuelle Stellung)</button>`);
+    } else if (q.status === 'open' && q.paused) {
+      const n = Object.keys(q.answers).length;
+      const rest = q.remaining != null ? `${Math.floor(q.remaining / 60000)}:${String(Math.round(q.remaining / 1000) % 60).padStart(2, '0')} übrig` : 'ohne Zeitlimit';
+      h.push(`<div class="qhead">Pause <span class="pill run">${rest}</span></div>
+        <p>Der Fernseher zeigt den QR-Code – wer rausgeflogen ist, kann sich neu verbinden und bekommt danach die Frage.</p>
+        <div>${n} von ${st.players.length} haben geantwortet</div>
+        <div class="qrow"><button class="qbtn go grow" data-act="resume">Weiter</button><button data-act="extend">+30 s</button><button data-act="close">Schließen</button></div>`);
     } else if (q.status === 'open') {
       const n = Object.keys(q.answers).length;
       h.push(`<div class="qhead">Frage läuft <span class="pill run" id="qzLeft">${clockText(q.deadline)}</span></div>
         <div class="bar"><div style="width:${st.players.length ? Math.round(100 * n / st.players.length) : 0}%"></div></div>
         <div>${n} von ${st.players.length} haben geantwortet</div>
-        <div class="qrow"><button class="qbtn go grow" data-act="close">Eingabe schließen</button><button data-act="extend">+30 s</button></div>`);
+        <div class="qrow"><button class="qbtn go grow" data-act="close">Eingabe schließen</button><button data-act="pause" title="Uhr anhalten und QR-Code auf dem Fernseher zeigen">Pause</button><button data-act="extend">+30 s</button></div>`);
     } else if (q.status === 'closed') {
       const pr = QZ.evalProg;
       h.push(`<div class="qhead">Auswertung läuft</div>
@@ -2123,6 +2135,8 @@ else {
     else if (act === 'close-pool') quizClosePool();
     else if (act === 'ask') quizAsk();
     else if (act === 'close') qsend({ t: 'close' });
+    else if (act === 'pause') qsend({ t: 'pause' });
+    else if (act === 'resume') qsend({ t: 'resume' });
     else if (act === 'extend') qsend({ t: 'extend', seconds: 30 });
     else if (act === 'next') quizNext();
     else if (act === 'rename') quizRename(id);

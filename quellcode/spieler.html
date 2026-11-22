@@ -4,16 +4,33 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; connect-src 'self' ws: wss:; img-src 'self' data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
-<meta name="theme-color" content="#171717">
+<!-- Die Seite bringt ein helles und ein dunkles Design mit; so färbt der Browser sie nicht selbst um -->
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f4f6f5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171717" media="(prefers-color-scheme: dark)">
 <title>SilentBoard Quiz</title>
 <link rel="icon" type="image/svg+xml" href="@@ICON@@">
 <style>
 /*@@CG_CSS@@*/
 :root {
-  --bg: #171717; --panel: #222624; --line: #3c4640; --text: #eef1ef; --muted: #9aa8a0;
-  --green: #5a9a7a; --light: #a9d4bc; --dark: #2c5a45; --warn: #d68a1f; --bad: #cc4b4b;
+  color-scheme: light dark;
+  /* helles Design */
+  --bg: #f4f6f5; --panel: #ffffff; --line: #d5dcd8; --text: #1c211e; --muted: #5d6a63;
+  --field: #ffffff; --btn: #eef2ef; --head: #2c5a45;
+  --green: #4f856a; --light: #2c5a45; --dark: #dcefe4; --warn: #d68a1f; --bad: #cc4b4b;
+  --r2-bg: #dcf1e3; --r2-fg: #1f5a36; --r1-bg: #faeccb; --r1-fg: #6b4d0c; --r0-bg: #f8dddd; --r0-fg: #7a2323;
   --sq-light: #f0d9b5; --sq-dark: #b58863;
 }
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #171717; --panel: #222624; --line: #3c4640; --text: #eef1ef; --muted: #9aa8a0;
+    --field: #121413; --btn: #2a302d; --head: #eef1ef;
+    --green: #5a9a7a; --light: #a9d4bc; --dark: #2c5a45;
+    --r2-bg: #24412f; --r2-fg: #c9efd6; --r1-bg: #4a3c1c; --r1-fg: #f3dca4; --r0-bg: #3a2626; --r0-fg: #f1c0c0;
+  }
+}
+/* Brett und Figuren behalten immer ihre Originalfarben */
+.cg-wrap, #promo piece { forced-color-adjust: none; color-scheme: only light; }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
 body { font: 17px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
@@ -21,7 +38,7 @@ button, input { font: inherit; color: inherit; }
 .wrap { max-width: 520px; margin: 0 auto; padding: 12px 14px 24px; display: flex; flex-direction: column; gap: 12px; }
 header { display: flex; align-items: center; gap: 10px; }
 header img { width: 40px; height: 40px; }
-header .t { font-weight: 700; font-size: 19px; }
+header .t { font-weight: 700; font-size: 19px; color: var(--head); }
 header .t span { color: var(--green); }
 header .me { margin-left: auto; font-size: 14px; color: var(--muted); text-align: right; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
@@ -29,14 +46,14 @@ h2 { margin: 0 0 6px; font-size: 20px; }
 p { margin: 0 0 8px; color: var(--muted); }
 label { display: block; font-size: 14px; color: var(--muted); margin: 10px 0 4px; }
 input[type=text], input[type=tel] {
-  width: 100%; padding: 14px 12px; font-size: 19px; border-radius: 10px; border: 1px solid var(--line); background: #121413;
+  width: 100%; padding: 14px 12px; font-size: 19px; border-radius: 10px; border: 1px solid var(--line); background: var(--field);
 }
 input:focus { outline: none; border-color: var(--green); }
-.btn { display: block; width: 100%; padding: 15px; font-size: 18px; font-weight: 700; border-radius: 12px; border: 1px solid var(--line); background: #2a302d; cursor: pointer; }
+.btn { display: block; width: 100%; padding: 15px; font-size: 18px; font-weight: 700; border-radius: 12px; border: 1px solid var(--line); background: var(--btn); cursor: pointer; }
 .btn.pri { background: var(--green); border-color: var(--green); color: #fff; }
 .btn:disabled { opacity: .45; }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.err { color: #ff9a9a; font-size: 15px; min-height: 1.2em; margin-top: 8px; }
+.err { color: var(--bad); font-size: 15px; min-height: 1.2em; margin-top: 8px; }
 .top { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 18px; }
 .clock { font-variant-numeric: tabular-nums; background: var(--dark); color: var(--light); border-radius: 20px; padding: 3px 12px; font-size: 17px; }
 .clock.low { background: var(--warn); color: #1b1300; }
@@ -54,9 +71,9 @@ input:focus { outline: none; border-color: var(--green); }
 .chosen b { color: var(--text); font-size: 20px; }
 .big { font-size: 40px; font-weight: 800; text-align: center; margin: 4px 0; }
 .res { border-radius: 14px; padding: 18px; text-align: center; }
-.res.p2 { background: #24412f; color: #c9efd6; }
-.res.p1 { background: #4a3c1c; color: #f3dca4; }
-.res.p0 { background: #3a2626; color: #f1c0c0; }
+.res.p2 { background: var(--r2-bg); color: var(--r2-fg); }
+.res.p1 { background: var(--r1-bg); color: var(--r1-fg); }
+.res.p0 { background: var(--r0-bg); color: var(--r0-fg); }
 .tag { display: inline-block; margin-top: 8px; padding: 4px 12px; border-radius: 20px; background: var(--dark); color: var(--light); font-size: 14px; font-weight: 700; }
 .kv { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--line); }
 .kv:last-child { border-bottom: 0; }
@@ -66,7 +83,7 @@ input:focus { outline: none; border-color: var(--green); }
 @keyframes r { to { transform: rotate(360deg); } }
 #promo { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 50; }
 #promo .box { display: flex; gap: 8px; background: var(--panel); padding: 12px; border-radius: 14px; }
-#promo button { width: 70px; height: 70px; border-radius: 10px; border: 1px solid var(--line); background: #2a302d; padding: 4px; }
+#promo button { width: 70px; height: 70px; border-radius: 10px; border: 1px solid var(--line); background: var(--sq-light); padding: 4px; }
 #promo piece { position: static; display: block; width: 100%; height: 100%; background-size: cover; }
 .net { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); background: var(--warn); color: #1b1300; font-weight: 700; padding: 8px 14px; border-radius: 20px; font-size: 14px; z-index: 40; }
 [hidden] { display: none !important; }
@@ -110,6 +127,13 @@ input:focus { outline: none; border-color: var(--green); }
         <button class="btn pri" id="qOk" disabled>Bestätigen</button>
       </div>
     </div>
+  </section>
+
+  <!-- Pause -->
+  <section class="card" id="vPause" hidden>
+    <h2>Pause</h2>
+    <p>Der Trainer hat die Frage kurz angehalten. Gleich geht's weiter – das Handy einfach offen lassen.</p>
+    <div class="spin"></div>
   </section>
 
   <!-- Abgegeben / Eingabe geschlossen -->
@@ -167,7 +191,7 @@ let ws = null, state = null, offset = 0, editing = false, pending = null, qid = 
 let cg = null;
 
 function show(id) {
-  for (const v of ['vJoin', 'vWait', 'vQuestion', 'vSent', 'vResult', 'vEnd']) $('#' + v).hidden = v !== id;
+  for (const v of ['vJoin', 'vWait', 'vPause', 'vQuestion', 'vSent', 'vResult', 'vEnd']) $('#' + v).hidden = v !== id;
 }
 
 /* ---------- Verbindung ---------- */
@@ -226,6 +250,7 @@ function render() {
   if (!token || !state) { show('vJoin'); setTimeout(() => $('#name').focus(), 50); return; }
   const s = state;
   if (s.phase === 'wait') { editing = false; show('vWait'); return; }
+  if (s.phase === 'paused') { show('vPause'); return; }
   if (s.phase === 'question') {
     if (qid !== s.question.id) { qid = s.question.id; editing = false; pending = null; boardFen = null; }
     if (s.answer && !editing) return showSent(s.answer, true);
