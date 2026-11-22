@@ -451,6 +451,9 @@ html.tv.hide-cursor body, html.tv.hide-cursor body * { cursor: none !important; 
 .tv-side .dist .who { grid-column: 2 / span 2; font-size: 2vh; color: #b9c4bd; margin-top: -.8vh; }
 .tv-side .tag { display: inline-block; font-size: 1.8vh; background: #2c5a45; color: #a9d4bc; border-radius: 2vh; padding: .2vh 1vh; margin-left: 1vh; vertical-align: middle; }
 .tv-side .facts { border-top: .2vh solid #3c4640; padding-top: 1.5vh; color: #d6dcd8; }
+.tv-side .legend { display: flex; flex-direction: column; gap: 1vh; }
+.tv-side .legend .lg { display: inline-block; width: 4.5vh; height: 1vh; border-radius: .5vh; margin-right: 1.2vh; vertical-align: middle; }
+.tv-side .legend .lg.green { background: #15781b; } .tv-side .legend .lg.blue { background: #003088; box-shadow: 0 0 0 .15vh #6f8fd6; }
 .tv-full { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3vh; background: var(--tvbg); padding: 4vh 6vw; }
 .tv-full .logo { height: 12vh; }
 .tv-full .join { display: flex; gap: 6vh; align-items: center; }
@@ -911,8 +914,11 @@ if (IS_TV) {
       const rows = q.moves.map(m => `<span class="mv">${esc(m.san)}${m.isGame ? '<span class="tag">Partiezug</span>' : ''}</span>
         <div><div class="b p${m.points == null ? 'n' : m.points}" style="width:${Math.max(6, Math.round(100 * m.count / max))}%"></div></div>
         <span class="n">${m.count}</span>${m.names ? `<div class="who">${esc(m.names)}</div>` : ''}`).join('');
+      const legend = [];
+      if (q.goodSans && q.goodSans.length) legend.push(`<div><i class="lg green"></i>Gute Züge (Engine): <b>${q.goodSans.map(esc).join(', ')}</b></div>`);
+      if (q.gameSan) legend.push(`<div><i class="lg blue"></i>Partiezug: <b>${esc(q.gameSan)}</b>${q.gameIsGood ? ' – auch ein guter Zug' : ''}</div>`);
       side.innerHTML = `<h2>Eure Züge</h2><div class="dist">${rows || '<span>Keine Antworten</span>'}</div>
-        <div class="facts">Engine: <b>${esc(q.bestSan || '–')}</b>${q.gameSan ? ` · Partie: <b>${esc(q.gameSan)}</b>` : ''}</div>`;
+        <div class="facts legend">${legend.join('')}</div>`;
     }
   }
   function lobbyHtml(q) {
@@ -2052,12 +2058,17 @@ else {
         san: fmtSan(m.san, settings.notation), count: m.count, points: m.points, isGame: m.isGame,
         names: settings.quizTvNames ? m.names : '',
       }));
-      const brush = { 2: 'green', 1: 'yellow', 0: 'red' };
-      const arrows = (r.moves || []).filter(m => m.uci).map(m => ({
-        orig: m.uci.slice(0, 2), dest: m.uci.slice(2, 4), brush: brush[m.points] || 'paleGrey',
-        modifiers: { lineWidth: Math.min(22, 7 + 3 * m.count) },
-      }));
-      return { phase: 'reveal', moves, arrows, bestSan: fmtSan(r.bestSan || '', settings.notation), gameSan: fmtSan(r.gameSan || '', settings.notation) };
+      const good = r.good || [];
+      const gameUci = r.gameUci || q.gameUci || '';
+      const arrow = (u, brush) => ({ orig: u.slice(0, 2), dest: u.slice(2, 4), brush });
+      const arrows = good.filter(g => g.uci !== gameUci).map(g => arrow(g.uci, 'green'));
+      if (gameUci) arrows.push(arrow(gameUci, 'blue'));
+      return {
+        phase: 'reveal', moves, arrows,
+        goodSans: good.map(g => fmtSan(g.san, settings.notation)),
+        gameSan: fmtSan(r.gameSan || '', settings.notation),
+        gameIsGood: !!gameUci && good.some(g => g.uci === gameUci),
+      };
     }
     if (QZ.tv === 'lobby') {
       const url = quizUrl();
@@ -2080,25 +2091,33 @@ else {
           if (l === 'uciok') { this.w.postMessage('setoption name Hash value 32'); this.w.postMessage('isready'); }
           else if (l === 'readyok') resolve();
           else if (this.cur) {
-            if (l.startsWith('info ') && l.includes(' pv ') && !/ (lower|upper)bound/.test(l) && !/ multipv [2-9]/.test(l)) {
+            if (l.startsWith('info ') && l.includes(' pv ') && !/ (lower|upper)bound/.test(l)) {
               const t = l.split(' ');
               const r = { cp: null, mate: null, pv: [] };
+              let k = 1;
               for (let i = 1; i < t.length; i++) {
-                if (t[i] === 'score') { const k = t[++i], v = +t[++i]; if (k === 'cp') r.cp = v; else r.mate = v; }
+                if (t[i] === 'multipv') k = +t[++i];
+                else if (t[i] === 'score') { const kind = t[++i], v = +t[++i]; if (kind === 'cp') r.cp = v; else r.mate = v; }
                 else if (t[i] === 'pv') { r.pv = t.slice(i + 1); break; }
               }
-              this.cur.last = r;
-            } else if (l.startsWith('bestmove')) { const c = this.cur; this.cur = null; c.resolve(c.last || { cp: 0, mate: null, pv: [] }); }
+              this.cur.lines[k - 1] = r;
+            } else if (l.startsWith('bestmove')) {
+              const c = this.cur; this.cur = null;
+              const lines = c.lines.filter(Boolean);
+              c.resolve(Object.assign({ cp: 0, mate: null, pv: [] }, lines[0], { lines }));
+            }
           }
         };
         this.w.postMessage('uci');
       });
       return this.readyP;
     },
-    async search(fen, uci) {
+    // mpv = wie viele beste Züge die Engine gleichzeitig bewertet
+    async search(fen, uci, mpv = 1) {
       await this.start();
       return new Promise(resolve => {
-        this.cur = { resolve, last: null };
+        this.cur = { resolve, lines: [] };
+        this.w.postMessage('setoption name MultiPV value ' + mpv);
         this.w.postMessage('position fen ' + fen);
         this.w.postMessage('go depth ' + QUIZ_DEPTH + (uci ? ' searchmoves ' + uci : ''));
       });
@@ -2113,17 +2132,22 @@ else {
     QZ.evalProg = { done: 0, total: ucis.length + 1 };
     renderQuiz();
     try {
-      const best = await QuizEngine.search(q.fen, null);
+      const sanOf = u => { try { return new Chess(q.fen).move({ from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] }).san; } catch { return ''; } };
+      // die drei besten Züge auf einmal bewerten
+      const best = await QuizEngine.search(q.fen, null, 3);
       const wcBest = winChance(best);
+      const lineLoss = new Map();
+      for (const l of best.lines) if (l.pv[0] && !lineLoss.has(l.pv[0])) lineLoss.set(l.pv[0], Math.max(0, (wcBest - winChance(l)) * 50));
+      // gute Züge laut Engine (höchstens 3): nicht schlechter als die 2-Punkte-Grenze
+      const good = [...lineLoss].filter(([, l]) => l <= settings.quizGood).slice(0, 3).map(([u]) => ({ uci: u, san: sanOf(u) }));
       QZ.evalProg.done++; renderQuiz();
       const loss = {};
       for (const u of ucis) {
-        if (best.pv[0] === u) loss[u] = 0;
+        if (lineLoss.has(u)) loss[u] = lineLoss.get(u);
         else { const r = await QuizEngine.search(q.fen, u); loss[u] = Math.max(0, (wcBest - winChance(r)) * 50); }
         QZ.evalProg.done++; renderQuiz();
       }
       const chess = new Chess(q.fen);
-      const sanOf = u => { try { return new Chess(q.fen).move({ from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] }).san; } catch { return ''; } };
       const pointsOf = l => (l <= settings.quizGood ? 2 : l <= settings.quizOk ? 1 : 0);
       const catOf = l => (l <= settings.quizGood ? 'good' : l <= settings.quizOk ? 'small' : 'big');
       const names = new Map(st.players.map(p => [p.id, p.name]));
@@ -2141,7 +2165,7 @@ else {
       if (dont.length) moves.push({ uci: '', san: 'Weiß nicht', count: dont.length, loss: null, points: null, isGame: false, names: dont.map(i => names.get(i)).filter(Boolean).join(', ') });
       void chess;
       if (!QZ.st.question || QZ.st.question.id !== q.id) { QZ.evalProg = null; renderQuiz(); return; }   // inzwischen abgebrochen
-      qsend({ t: 'results', qid: q.id, results: { players, moves, bestSan: best.pv[0] ? sanOf(best.pv[0]) : '', gameSan: q.gameUci ? sanOf(q.gameUci) : '' } });
+      qsend({ t: 'results', qid: q.id, results: { players, moves, good, bestSan: best.pv[0] ? sanOf(best.pv[0]) : '', gameSan: q.gameUci ? sanOf(q.gameUci) : '', gameUci: q.gameUci || '' } });
       QZ.tvDone = 'reveal';
     } catch (err) {
       console.error(err);
@@ -2298,7 +2322,8 @@ else {
       mid.push(playerTiles(st, q));
     } else {
       const r = q.results || { moves: [] };
-      bar.push(`<div class="qhead">Ergebnis <span class="pill ok">Engine: ${esc(fmtSan(r.bestSan || '–', settings.notation))}</span></div>
+      const goodTxt = (r.good || []).map(g => fmtSan(g.san, settings.notation)).join(', ') || fmtSan(r.bestSan || '–', settings.notation);
+      bar.push(`<div class="qhead">Ergebnis <span class="pill ok">Gute Züge: ${esc(goodTxt)}</span></div>
         <div class="qrow"><button class="qbtn go grow" data-act="next">Fertig – nächste Frage</button><button data-act="finish">Quiz beenden</button></div>`);
       const rows = r.moves.map(m => `<span class="pts p${m.points == null ? 0 : m.points}">${m.points == null ? '–' : m.points}</span>
         <span><b>${esc(fmtSan(m.san, settings.notation))}</b>${m.isGame ? '<span class="gm">Partiezug</span>' : ''}</span>

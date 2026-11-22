@@ -284,7 +284,13 @@ function onTrainerMessage(ws, raw) {
           players[p.id] = { points: pts, cat: String((x && x.cat) || (q.answers.has(p.id) ? 'none' : 'missing')).slice(0, 20), isGame: !!(x && x.isGame), loss: x && x.loss != null ? +x.loss : null };
           p.total += pts; p.last = pts;
         }
-        q.results = { players, bestSan: String(r.bestSan || '').slice(0, 12), gameSan: String(r.gameSan || '').slice(0, 12), moves: Array.isArray(r.moves) ? r.moves.slice(0, 60) : [] };
+        const isUci = u => typeof u === 'string' && /^[a-h][1-8][a-h][1-8][qrbn]?$/.test(u);
+        const good = (Array.isArray(r.good) ? r.good : []).filter(g => g && isUci(g.uci)).slice(0, 3)
+          .map(g => ({ uci: g.uci, san: String(g.san || '').slice(0, 12) }));
+        q.results = {
+          players, good, bestSan: String(r.bestSan || '').slice(0, 12), gameSan: String(r.gameSan || '').slice(0, 12),
+          gameUci: isUci(r.gameUci) ? r.gameUci : '', moves: Array.isArray(r.moves) ? r.moves.slice(0, 60) : [],
+        };
         q.status = 'done';
         Q.history.push({ id: q.id, fen: q.fen, results: q.results, answers: Object.fromEntries(q.answers) });
         break;
