@@ -2274,7 +2274,7 @@ else {
       tv = { cur: QZ.tv === 'lobby' ? 'lobby' : 'final', opts: [['final', 'Endergebnis'], ['lobby', 'QR-Code']] };
     } else if (!q) {
       bar.push(`<div class="qhead">${st.rounds ? `Bereit für Frage ${st.rounds + 1}` : 'Bereit für die erste Frage'}</div>
-        <div class="qrow"><button class="qbtn go grow" data-act="ask">Zug abfragen (aktuelle Stellung)</button>${st.rounds ? '<button data-act="finish">Quiz beenden</button>' : ''}</div>`);
+        <div class="qrow"><button class="qbtn go grow" data-act="ask">Zug abfragen</button>${st.rounds ? '<button data-act="finish">Quiz beenden</button>' : ''}</div>`);
       mid.push(playerTiles(st, q));
       tv = { cur: QZ.tv, opts: [['lobby', 'QR-Code'], ['board', 'Brett'], ['table', 'Tabelle']] };
     } else if (q.status === 'open') {
