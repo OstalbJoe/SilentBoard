@@ -236,6 +236,8 @@ select.mini { padding: 1px 4px; border-radius: 4px; border: 1px solid var(--line
 .quiz .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--muted); margin-right: 6px; }
 .quiz .dot.on { background: var(--qgreen); }
 .quiz .ans { color: var(--qgreen); font-weight: 700; white-space: nowrap; }
+.quiz .qbtn.cancel { background: none; border-color: var(--line); color: var(--muted); font-weight: 600; font-size: 13px; padding: 5px; }
+.quiz .qbtn.cancel:hover { border-color: var(--bad); color: var(--bad); }
 .quiz .live { background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
 .quiz .mvlist { display: grid; grid-template-columns: auto 1fr auto auto; gap: 3px 8px; align-items: center; }
 .quiz .mvlist .who { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -622,6 +624,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
       <li>Spieler scannen den QR-Code und geben ihren Namen ein. Laptop und Handys müssen im selben WLAN sein.</li>
       <li>Zur gewünschten Stellung gehen und „Zug abfragen“ klicken. Die Spieler tippen ihren Zug und bestätigen ihn.</li>
       <li>„Pause“ hält die Uhr an und zeigt den QR-Code wieder auf dem Fernseher – z. B. wenn jemand rausgeflogen ist. „Weiter“ setzt mit der Restzeit fort.</li>
+      <li>„Abbrechen (nicht werten)“ verwirft eine laufende Frage samt aller abgegebenen Züge – z. B. wenn du versehentlich dieselbe Stellung noch einmal abgefragt hast.</li>
       <li>„Eingabe schließen“ (oder die Zeit läuft ab) – die Engine bewertet alle Züge: 2 Punkte für einen guten Zug, 1 Punkt für einen kleinen Verlust.</li>
       <li>Auf dem Fernseher Auflösung oder Tabelle zeigen, dann „Fertig – nächste Frage“.</li>
       <li>Zum Schluss „Quiz beenden – Endergebnis zeigen“: Siegertreppchen auf dem Fernseher, jeder sieht seinen Platz auf dem Handy. Während des Quiz sehen die Spieler ihre Platzierung nicht.</li>
@@ -2017,6 +2020,7 @@ else {
         .map(m => ({ uci: m.uci, san: m.san, count: m.count, loss: m.loss, points: m.points, isGame: m.isGame, names: m.ids.map(i => names.get(i)).filter(Boolean).join(', ') }));
       if (dont.length) moves.push({ uci: '', san: 'Weiß nicht', count: dont.length, loss: null, points: null, isGame: false, names: dont.map(i => names.get(i)).filter(Boolean).join(', ') });
       void chess;
+      if (!QZ.st.question || QZ.st.question.id !== q.id) { QZ.evalProg = null; renderQuiz(); return; }   // inzwischen abgebrochen
       qsend({ t: 'results', qid: q.id, results: { players, moves, bestSan: best.pv[0] ? sanOf(best.pv[0]) : '', gameSan: q.gameUci ? sanOf(q.gameUci) : '' } });
       QZ.tvDone = 'reveal';
     } catch (err) {
@@ -2137,19 +2141,22 @@ else {
         <p>Der Fernseher zeigt den QR-Code – wer rausgeflogen ist, kann sich neu verbinden und bekommt danach die Frage.</p>
         <div>${n} von ${st.players.length} haben geantwortet</div>
         ${liveSummary(q)}
-        <div class="qrow"><button class="qbtn go grow" data-act="resume">Weiter</button><button data-act="extend">+30 s</button><button data-act="close">Schließen</button></div>`);
+        <div class="qrow"><button class="qbtn go grow" data-act="resume">Weiter</button><button data-act="extend">+30 s</button><button data-act="close">Schließen</button></div>
+        <button class="qbtn cancel" data-act="cancel" title="Frage verwerfen – abgegebene Züge zählen nicht">Abbrechen (nicht werten)</button>`);
     } else if (q.status === 'open') {
       const n = Object.keys(q.answers).length;
       h.push(`<div class="qhead">Frage läuft <span class="pill run" id="qzLeft">${clockText(q.deadline)}</span></div>
         <div class="bar"><div style="width:${st.players.length ? Math.round(100 * n / st.players.length) : 0}%"></div></div>
         <div>${n} von ${st.players.length} haben geantwortet</div>
         ${liveSummary(q)}
-        <div class="qrow"><button class="qbtn go grow" data-act="close">Eingabe schließen</button><button data-act="pause" title="Uhr anhalten und QR-Code auf dem Fernseher zeigen">Pause</button><button data-act="extend">+30 s</button></div>`);
+        <div class="qrow"><button class="qbtn go grow" data-act="close">Eingabe schließen</button><button data-act="pause" title="Uhr anhalten und QR-Code auf dem Fernseher zeigen">Pause</button><button data-act="extend">+30 s</button></div>
+        <button class="qbtn cancel" data-act="cancel" title="Frage verwerfen – abgegebene Züge zählen nicht">Abbrechen (nicht werten)</button>`);
     } else if (q.status === 'closed') {
       const pr = QZ.evalProg;
       h.push(`<div class="qhead">Auswertung läuft</div>
         ${pr ? `<div class="bar"><div style="width:${Math.round(100 * pr.done / pr.total)}%"></div></div><div>Bewerte Zug ${Math.min(pr.done + 1, pr.total)} von ${pr.total} …</div>` : ''}
-        ${QZ.evalErr ? `<div class="warnbox">${esc(QZ.evalErr)} <button data-act="retry">Nochmal</button></div>` : ''}`);
+        ${QZ.evalErr ? `<div class="warnbox">${esc(QZ.evalErr)} <button data-act="retry">Nochmal</button></div>` : ''}
+        <button class="qbtn cancel" data-act="cancel" title="Frage verwerfen – abgegebene Züge zählen nicht">Abbrechen (nicht werten)</button>`);
     } else {
       const r = q.results || { moves: [] };
       const rows = r.moves.map(m => `<span class="pts p${m.points == null ? 0 : m.points}">${m.points == null ? '–' : m.points}</span>
@@ -2189,6 +2196,12 @@ else {
     else if (act === 'ask') quizAsk();
     else if (act === 'close') qsend({ t: 'close' });
     else if (act === 'pause') qsend({ t: 'pause' });
+    else if (act === 'cancel') {
+      const q = QZ.st.question, n = q ? Object.keys(q.answers).length : 0;
+      if (confirm(`Frage abbrechen? ${n === 1 ? 'Der abgegebene Zug wird verworfen, ' : n > 1 ? `Die ${n} abgegebenen Züge werden verworfen, ` : ''}es gibt keine Punkte.`)) {
+        qsend({ t: 'cancel' }); QZ.tv = 'board'; QZ.evalProg = null; QZ.evalErr = null;
+      }
+    }
     else if (act === 'finish') { if (confirm('Quiz beenden und das Endergebnis zeigen?')) { qsend({ t: 'finish' }); QZ.tv = 'final'; } }
     else if (act === 'continue') { qsend({ t: 'continue' }); QZ.tv = 'board'; }
     else if (act === 'resume') qsend({ t: 'resume' });

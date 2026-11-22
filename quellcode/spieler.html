@@ -112,6 +112,7 @@ input:focus { outline: none; border-color: var(--green); }
   <!-- Warten -->
   <section class="card" id="vWait" hidden>
     <h2>Du bist dabei</h2>
+    <p id="waitNote" hidden style="color:var(--text)"><b>Die letzte Frage wurde abgebrochen – sie zählt nicht.</b></p>
     <p>Warte, bis der Trainer eine Stellung abfragt. Das Handy einfach offen lassen.</p>
     <div class="spin"></div>
   </section>
@@ -262,7 +263,7 @@ function render() {
   if (ended) return;
   if (!token || !state) { show('vJoin'); setTimeout(() => $('#name').focus(), 50); return; }
   const s = state;
-  if (s.phase === 'wait') { editing = false; show('vWait'); return; }
+  if (s.phase === 'wait') { editing = false; $('#waitNote').hidden = !s.cancelled; show('vWait'); return; }
   if (s.phase === 'paused') { show('vPause'); return; }
   if (s.phase === 'final') {
     show('vFinal');

@@ -30,6 +30,7 @@ const Q = {
   history: [],           // abgeschlossene Fragen (für Tabelle und spätere Auswertung)
   trainers: new Set(),   // verbundene Trainer-Fenster
   finished: false,       // Quiz beendet: Endergebnis wird gezeigt
+  cancelled: false,      // letzte Frage wurde abgebrochen (Hinweis für die Handys)
   seq: 0,
 };
 let closeTimer = null;
@@ -94,7 +95,7 @@ function playerState(p) {
   const st = standings().find(s => s.id === p.id);
   const base = { t: 'state', now: Date.now(), name: p.name, total: p.total };
   if (Q.finished) return { ...base, phase: 'final', rank: st ? st.rank : null, of: Q.players.size, rounds: Q.history.length };
-  if (!q) return { ...base, phase: 'wait' };
+  if (!q) return { ...base, phase: 'wait', cancelled: Q.cancelled };
   const a = q.answers.get(p.id) || null;
   if (q.status === 'open' && q.paused) return { ...base, phase: 'paused', answer: a };
   if (q.status === 'open') return { ...base, phase: 'question', question: { id: q.id, fen: q.fen, side: q.side, deadline: q.deadline }, answer: a };
@@ -223,7 +224,7 @@ function onTrainerMessage(ws, raw) {
         let c;
         try { c = new Chess(String(m.fen)); } catch { return; }
         if (c.isGameOver()) return;
-        Q.finished = false;
+        Q.finished = false; Q.cancelled = false;
         const secs = Math.max(0, Math.min(600, +m.seconds || 0));
         Q.question = {
           id: 'q' + (++Q.seq), fen: c.fen(), side: c.turn() === 'w' ? 'white' : 'black',
@@ -282,7 +283,16 @@ function onTrainerMessage(ws, raw) {
         Q.history.push({ id: q.id, fen: q.fen, results: q.results, answers: Object.fromEntries(q.answers) });
         break;
       }
-      case 'next': Q.question = null; clearTimeout(closeTimer); break;
+      case 'next': Q.question = null; Q.cancelled = false; clearTimeout(closeTimer); break;
+      case 'cancel': {
+        // Frage abbrechen, ohne zu werten: abgegebene Züge werden verworfen
+        const q = Q.question;
+        if (!q || q.status === 'done') return;
+        Q.question = null; Q.cancelled = true;
+        clearTimeout(closeTimer);
+        log('Frage abgebrochen – nicht gewertet.');
+        break;
+      }
       case 'finish': {
         // Quiz beenden: offene Frage verwerfen, Endergebnis an alle
         if (Q.question && Q.question.status !== 'done') return;
