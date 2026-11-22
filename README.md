@@ -34,7 +34,10 @@ Kurzanleitung: im Programm auf **?** klicken.
 Raum offen, fragt der Browser vorher nach und SilentBoard läuft weiter, damit Spieler und Punkte erhalten
 bleiben – erneut starten holt alles zurück. „⏻ Beenden“ oben rechts beendet SilentBoard jederzeit sofort.
 
-Unter Linux legt `bash werkzeuge/linux-menueeintrag.sh /pfad/zu/SilentBoard-linux` einen Eintrag mit Logo in der App-Übersicht an.
+**Linux – App-Übersicht:** Die Programmdatei zuerst an ihren festen Platz legen (z. B. `~/Programme/`). Beim ersten
+Start fragt SilentBoard im Browser, ob es mit Logo in die App-Übersicht aufgenommen werden soll; danach startet man es
+über die Super-Taste oder das Dock. Wird die Datei später verschoben, fragt SilentBoard erneut und passt den Eintrag an.
+Von Hand geht es auch: `SilentBoard-linux --installieren` bzw. `--entfernen`.
 
 ### Quiz
 
@@ -69,7 +72,7 @@ Voraussetzung: [Node.js](https://nodejs.org) ab Version 18.
 | `quellcode/entry.js` | bündelt chessground, chess.js und den QR-Code-Erzeuger |
 | `quellcode/build.mjs` | baut die Seiten und die Programmdateien |
 | `logo/` | Logo (hell und dunkel) und App-Symbole (`npm run symbole`) |
-| `werkzeuge/` | Linux-Menüeintrag, App-Symbole erzeugen |
+| `werkzeuge/` | App-Symbole erzeugen |
 
 ## Lizenz
 

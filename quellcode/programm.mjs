@@ -12,6 +12,9 @@ import os from 'os';
 import { Chess } from 'chess.js';
 import APP_HTML from '../dist/app.html' with { type: 'text' };
 import SPIELER_HTML from '../dist/spieler.html' with { type: 'text' };
+import ICON_PNG from '../logo/icon-512.png' with { type: 'file' };
+import fs from 'fs';
+import path from 'path';
 
 const LOCAL_PORT = +process.env.SB_PORT || 8642;   // SB_PORT nur zum Testen neben einem laufenden SilentBoard
 const MAX_PLAYERS = 60;
@@ -217,6 +220,13 @@ function onTrainerMessage(ws, raw) {
   try {
     switch (m.t) {
       case 'hello': ws.send(JSON.stringify(trainerState())); return;
+      case 'menu-install': {
+        if (!CAN_MENU) return;
+        menuInstall().then(() => ws.send(JSON.stringify({ t: 'menu-done' })))
+          .catch(() => ws.send(JSON.stringify({ t: 'error', error: 'Der Eintrag in der App-Übersicht konnte nicht angelegt werden.' })));
+        return;
+      }
+      case 'menu-skip': menuRemember(); return;
       case 'quit': {
         const bye = JSON.stringify({ t: 'bye' });
         for (const t of Q.trainers) t.send(bye);
@@ -403,11 +413,60 @@ function startLocal(port) {
         windowOpened();
         if (ws.data.role === 'view') { views.add(ws); return; }
         Q.trainers.add(ws); ws.send(JSON.stringify(trainerState()));
+        if (menuShouldAsk()) ws.send(JSON.stringify({ t: 'menu', status: menuStatus() }));
       },
       message(ws, raw) { if (ws.data.role === 'trainer') onTrainerMessage(ws, raw); },
       close(ws) { Q.trainers.delete(ws); views.delete(ws); checkAutoExit(); },
     },
   });
+}
+
+/* ------------------------------------------------------------------ */
+/* Linux: Eintrag in der App-Übersicht (mit Logo)                      */
+/* ------------------------------------------------------------------ */
+const MENU = (() => {
+  const home = os.homedir();
+  const apps = path.join(home, '.local/share/applications');
+  const icons = path.join(home, '.local/share/icons/hicolor/512x512/apps');
+  return {
+    apps, desktop: path.join(apps, 'silentboard.desktop'), icon: path.join(icons, 'silentboard.png'), icons,
+    asked: path.join(home, '.config/silentboard/menue-gefragt'),
+  };
+})();
+// nur die fertige Programmdatei unter Linux kann sich selbst eintragen
+const CAN_MENU = process.platform === 'linux' && Bun.main.startsWith('/$bunfs/');
+
+// 'fehlt' | 'veraltet' (Programmdatei liegt woanders) | 'ok'
+function menuStatus() {
+  try {
+    const txt = fs.readFileSync(MENU.desktop, 'utf8');
+    return txt.includes(`Exec="${process.execPath}"`) ? 'ok' : 'veraltet';
+  } catch { return 'fehlt'; }
+}
+function menuShouldAsk() {
+  if (!CAN_MENU) return false;
+  const st = menuStatus();
+  return st === 'veraltet' || (st === 'fehlt' && !fs.existsSync(MENU.asked));
+}
+function menuRemember() {
+  try { fs.mkdirSync(path.dirname(MENU.asked), { recursive: true }); fs.writeFileSync(MENU.asked, ''); } catch { /* egal */ }
+}
+async function menuInstall() {
+  fs.mkdirSync(MENU.apps, { recursive: true });
+  fs.mkdirSync(MENU.icons, { recursive: true });
+  fs.writeFileSync(MENU.icon, Buffer.from(await Bun.file(ICON_PNG).arrayBuffer()));
+  // Terminal=true: das Fenster mit „SilentBoard läuft …“ bleibt sichtbar; Schließen beendet SilentBoard
+  fs.writeFileSync(MENU.desktop, [
+    '[Desktop Entry]', 'Version=1.0', 'Type=Application', 'Name=SilentBoard',
+    'Comment=Schachpartien im Training vorführen', `Exec="${process.execPath}"`, `Icon=${MENU.icon}`,
+    'Terminal=true', 'Categories=Game;BoardGame;', '',
+  ].join('\n'));
+  menuRemember();
+  try { Bun.spawnSync(['update-desktop-database', MENU.apps], { stdout: 'ignore', stderr: 'ignore' }); } catch { /* nicht überall vorhanden */ }
+}
+function menuRemove() {
+  for (const f of [MENU.desktop, MENU.icon]) { try { fs.unlinkSync(f); } catch { /* schon weg */ } }
+  try { Bun.spawnSync(['update-desktop-database', MENU.apps], { stdout: 'ignore', stderr: 'ignore' }); } catch { /* nicht überall vorhanden */ }
 }
 
 function log(s) { console.log(`[${new Date().toLocaleTimeString('de-DE')}] ${s}`); }
@@ -418,6 +477,13 @@ function openBrowser(url) {
 }
 
 async function main() {
+  const arg = process.argv[2];
+  if (arg === '--installieren' || arg === '--entfernen') {
+    if (!CAN_MENU) { console.error('Das geht nur mit der Linux-Programmdatei.'); process.exit(1); }
+    if (arg === '--installieren') { await menuInstall(); console.log('SilentBoard ist jetzt in der App-Übersicht (Super-Taste → „SilentBoard“).'); }
+    else { menuRemove(); console.log('SilentBoard-Eintrag entfernt.'); }
+    return;
+  }
   const url = `http://127.0.0.1:${LOCAL_PORT}/`;
   try {
     startLocal(LOCAL_PORT);

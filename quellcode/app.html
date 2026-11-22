@@ -367,6 +367,12 @@ select.mini { padding: 1px 4px; border-radius: 4px; border: 1px solid var(--line
 
 #byeOverlay { position: fixed; inset: 0; z-index: 300; background: var(--bg); display: flex; align-items: center; justify-content: center; text-align: center; }
 #byeOverlay img { width: 72px; height: 72px; }
+#menuAsk { position: fixed; right: 16px; bottom: 16px; z-index: 250; max-width: 400px; display: flex; gap: 12px; align-items: flex-start;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.45); }
+#menuAsk[hidden] { display: none; }
+#menuAsk img { width: 44px; height: 44px; flex: none; }
+#menuAsk p { margin: 4px 0 10px; color: var(--muted); }
+#menuAsk .row { display: flex; gap: 8px; flex-wrap: wrap; }
 #byeOverlay h2 { margin: 12px 0 4px; }
 #byeOverlay p { color: var(--muted); margin: 0; }
 #quitBtn:hover { border-color: var(--bad); color: var(--bad); }
@@ -725,6 +731,8 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
   </dialog>
 </div>
 
+<div id="menuAsk" hidden><img src="@@ICON@@" alt=""><div><b>In die App-Übersicht aufnehmen?</b><p></p>
+  <div class="row"><button class="primary" data-menu="ja">Ja, aufnehmen</button><button data-menu="nein">Nein, danke</button></div></div></div>
 <div id="byeOverlay" hidden><div><img src="@@ICON@@" alt=""><h2>SilentBoard wurde beendet</h2><p>Du kannst dieses Fenster jetzt schließen.</p></div></div>
 
 <!-- ==================== TV-Ansicht ==================== -->
@@ -2009,6 +2017,8 @@ else {
       let m; try { m = JSON.parse(e.data); } catch { return; }
       if (m.t === 'error') { showMsg('Quiz: ' + m.error, 'err'); return; }
       if (m.t === 'bye') { QZ.quit = true; return; }
+      if (m.t === 'menu') { showMenuAsk(m.status); return; }
+      if (m.t === 'menu-done') { $('#menuAsk').hidden = true; showMsg('SilentBoard ist jetzt in der App-Übersicht (Super-Taste → „SilentBoard“).', 'ok'); return; }
       if (m.t !== 'state') return;
       QZ.st = m; QZ.offset = m.now - Date.now();
       const q = m.question;
@@ -2021,6 +2031,23 @@ else {
       renderQuiz(); setTimeout(quizConnect, 1500);
     };
   }
+
+  // Linux: beim ersten Start anbieten, SilentBoard in die App-Übersicht aufzunehmen
+  function showMenuAsk(status) {
+    if (IS_TV) return;
+    const box = $('#menuAsk');
+    box.querySelector('p').textContent = status === 'veraltet'
+      ? 'Die Programmdatei liegt jetzt an einem anderen Ort. Soll der Eintrag in der App-Übersicht angepasst werden?'
+      : 'Soll SilentBoard mit Logo in die App-Übersicht aufgenommen werden? Dann startest du es künftig über die Super-Taste oder das Dock.';
+    // erst nach dem Startbild zeigen
+    setTimeout(() => { box.hidden = false; }, 4500);
+  }
+  $('#menuAsk').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || !QZ.ws) return;
+    if (b.dataset.menu === 'ja') { b.disabled = true; qsend({ t: 'menu-install' }); }
+    else { qsend({ t: 'menu-skip' }); $('#menuAsk').hidden = true; }
+  });
 
   function quizUrl() {
     const p = QZ.st && QZ.st.pool;
