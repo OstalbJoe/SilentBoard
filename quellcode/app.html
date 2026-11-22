@@ -705,7 +705,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
     <h3 style="margin-top:14px">Quiz</h3>
     <p>Oben rechts „Modus: Quiz“ wählen – die Spieler raten dann den nächsten Zug auf dem Handy:</p>
     <ol style="margin:0 0 8px 18px;padding:0;font-size:14px">
-      <li>„Raum öffnen“ – erst jetzt ist SilentBoard im WLAN für Handys erreichbar. Der Fernseher zeigt QR-Code und Raum-Code.
+      <li>„Raum öffnen“ – erst jetzt ist SilentBoard im WLAN für Handys erreichbar. Das TV-Fenster öffnet sich dabei automatisch und zeigt QR-Code und Raum-Code.
         Unter Windows fragt die Firewall beim ersten Mal nach: „Private Netzwerke“ erlauben.</li>
       <li>Spieler scannen den QR-Code und geben ihren Namen ein. Laptop und Handys müssen im selben WLAN sein.</li>
       <li>Zur gewünschten Stellung gehen und „Zug abfragen“ klicken. Die Spieler tippen ihren Zug und bestätigen ihn.</li>
@@ -2358,7 +2358,11 @@ else {
     if (!b) return;
     const act = b.dataset.act, id = b.dataset.id;
     if (b.dataset.tv) return setTvView(b.dataset.tv);
-    if (act === 'open') { qsend({ t: 'pool-open' }); QZ.tv = 'lobby'; }
+    if (act === 'open') {
+      qsend({ t: 'pool-open' }); QZ.tv = 'lobby';
+      // TV-Fenster gleich mit öffnen, damit der QR-Code sofort zu sehen ist
+      if (!tvConnected() && !(tvWin && !tvWin.closed)) openTv();
+    }
     else if (act === 'gear') { e.stopPropagation(); const box = $('#qzSet'); box.hidden = !box.hidden; if (!box.hidden) box.innerHTML = settingsHtml(true); }
     else if (act === 'mode-quiz') setMode('quiz');
     else if (act === 'close-pool') { $('#qzSet').hidden = true; quizClosePool(); }
