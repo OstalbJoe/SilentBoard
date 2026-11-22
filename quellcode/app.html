@@ -235,7 +235,8 @@ select.mini { padding: 1px 4px; border-radius: 4px; border: 1px solid var(--line
 .quiz .plist button:hover { color: var(--text); border-color: var(--line); }
 .quiz .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--muted); margin-right: 6px; }
 .quiz .dot.on { background: var(--qgreen); }
-.quiz .ans { color: var(--qgreen); font-weight: 700; }
+.quiz .ans { color: var(--qgreen); font-weight: 700; white-space: nowrap; }
+.quiz .live { background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
 .quiz .mvlist { display: grid; grid-template-columns: auto 1fr auto auto; gap: 3px 8px; align-items: center; }
 .quiz .mvlist .who { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .quiz .pts { font-weight: 800; border-radius: 6px; padding: 0 7px; text-align: center; }
@@ -2058,6 +2059,17 @@ else {
   }
 
   /* ---- Anzeige im Reiter „Quiz“ ---- */
+  // Bisher abgegebene Züge, gruppiert – nur für den Trainer
+  function liveSummary(q) {
+    const count = new Map();
+    for (const a of Object.values(q.answers)) {
+      const k = a.dontKnow ? 'Weiß nicht' : fmtSan(a.san, settings.notation);
+      count.set(k, (count.get(k) || 0) + 1);
+    }
+    if (!count.size) return '';
+    const parts = [...count].sort((a, b) => b[1] - a[1]).map(([k, n]) => `<b>${esc(k)}</b> ${n}×`);
+    return `<div class="live">Bisher: ${parts.join(' · ')}</div>`;
+  }
   function clockText(deadline) {
     if (!deadline) return 'ohne Zeitlimit';
     const left = Math.max(0, Math.ceil((deadline - QZ.offset - Date.now()) / 1000));
@@ -2124,12 +2136,14 @@ else {
       h.push(`<div class="qhead">Pause <span class="pill run">${rest}</span></div>
         <p>Der Fernseher zeigt den QR-Code – wer rausgeflogen ist, kann sich neu verbinden und bekommt danach die Frage.</p>
         <div>${n} von ${st.players.length} haben geantwortet</div>
+        ${liveSummary(q)}
         <div class="qrow"><button class="qbtn go grow" data-act="resume">Weiter</button><button data-act="extend">+30 s</button><button data-act="close">Schließen</button></div>`);
     } else if (q.status === 'open') {
       const n = Object.keys(q.answers).length;
       h.push(`<div class="qhead">Frage läuft <span class="pill run" id="qzLeft">${clockText(q.deadline)}</span></div>
         <div class="bar"><div style="width:${st.players.length ? Math.round(100 * n / st.players.length) : 0}%"></div></div>
         <div>${n} von ${st.players.length} haben geantwortet</div>
+        ${liveSummary(q)}
         <div class="qrow"><button class="qbtn go grow" data-act="close">Eingabe schließen</button><button data-act="pause" title="Uhr anhalten und QR-Code auf dem Fernseher zeigen">Pause</button><button data-act="extend">+30 s</button></div>`);
     } else if (q.status === 'closed') {
       const pr = QZ.evalProg;
@@ -2151,7 +2165,9 @@ else {
 
     const plist = st.players.map(p => {
       const a = q && q.answers[p.id];
-      const status = q && q.status === 'open' ? (a ? '<span class="ans">✓</span>' : '<span class="off">…</span>') : `${p.total}`;
+      const status = q && q.status === 'open'
+        ? (a ? `<span class="ans">${a.dontKnow ? 'Weiß nicht' : esc(fmtSan(a.san, settings.notation))}</span>` : '<span class="off">…</span>')
+        : `${p.total}`;
       return `<span class="nm ${p.connected ? '' : 'off'}"><span class="dot ${p.connected ? 'on' : ''}"></span>${esc(p.name)}</span>
         <span>${status}</span>
         <button data-act="rename" data-id="${p.id}" title="Namen ändern">✎</button>

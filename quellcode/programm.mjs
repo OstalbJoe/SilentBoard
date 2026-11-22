@@ -212,6 +212,7 @@ function closeQuestion() {
 function onTrainerMessage(ws, raw) {
   let m;
   try { m = JSON.parse(raw); } catch { return; }
+  if (process.env.SB_DEBUG) log(`Trainer: ${String(raw).slice(0, 90)}`);
   try {
     switch (m.t) {
       case 'hello': ws.send(JSON.stringify(trainerState())); return;
