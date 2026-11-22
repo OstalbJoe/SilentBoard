@@ -155,9 +155,22 @@ input:focus { outline: none; border-color: var(--green); }
       <div class="kv"><span>Dein Zug</span><b id="rMine"></b></div>
       <div class="kv"><span>Engine</span><b id="rBest"></b></div>
       <div class="kv"><span>Gesamt</span><b id="rTotal"></b></div>
-      <div class="kv"><span>Platz</span><b id="rRank"></b></div>
     </div>
     <p class="muted" style="margin-top:12px">Warte auf die nächste Frage …</p>
+  </section>
+
+  <!-- Endergebnis -->
+  <section id="vFinal" hidden>
+    <div class="res p2" style="padding:24px">
+      <div style="font-size:18px; font-weight:700">Quiz beendet</div>
+      <div class="big" id="fRank"></div>
+      <div id="fOf"></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="kv"><span>Deine Punkte</span><b id="fTotal"></b></div>
+      <div class="kv"><span>Fragen</span><b id="fRounds"></b></div>
+    </div>
+    <p class="muted" style="margin-top:12px">Danke fürs Mitspielen!</p>
   </section>
 
   <!-- Ende -->
@@ -191,7 +204,7 @@ let ws = null, state = null, offset = 0, editing = false, pending = null, qid = 
 let cg = null;
 
 function show(id) {
-  for (const v of ['vJoin', 'vWait', 'vPause', 'vQuestion', 'vSent', 'vResult', 'vEnd']) $('#' + v).hidden = v !== id;
+  for (const v of ['vJoin', 'vWait', 'vPause', 'vQuestion', 'vSent', 'vResult', 'vFinal', 'vEnd']) $('#' + v).hidden = v !== id;
 }
 
 /* ---------- Verbindung ---------- */
@@ -251,6 +264,14 @@ function render() {
   const s = state;
   if (s.phase === 'wait') { editing = false; show('vWait'); return; }
   if (s.phase === 'paused') { show('vPause'); return; }
+  if (s.phase === 'final') {
+    show('vFinal');
+    $('#fRank').textContent = s.rank ? `Platz ${s.rank}` : '–';
+    $('#fOf').textContent = s.of ? `von ${s.of} Spielern` : '';
+    $('#fTotal').textContent = s.total === 1 ? '1 Punkt' : `${s.total} Punkte`;
+    $('#fRounds').textContent = String(s.rounds || 0);
+    return;
+  }
   if (s.phase === 'question') {
     if (qid !== s.question.id) { qid = s.question.id; editing = false; pending = null; boardFen = null; }
     if (s.answer && !editing) return showSent(s.answer, true);
@@ -285,7 +306,6 @@ function showResult(s) {
   $('#rMine').textContent = !a ? '–' : a.dontKnow ? 'Weiß nicht' : de(a.san);
   $('#rBest').textContent = de(s.best) || '–';
   $('#rTotal').textContent = s.total === 1 ? '1 Punkt' : `${s.total} Punkte`;
-  $('#rRank').textContent = s.rank ? `${s.rank} von ${s.of}` : '–';
 }
 
 /* ---------- Brett ---------- */

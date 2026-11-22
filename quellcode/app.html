@@ -399,6 +399,16 @@ html.tv.hide-cursor body, html.tv.hide-cursor body * { cursor: none !important; 
 .tv-full td.r { text-align: right; font-variant-numeric: tabular-nums; }
 .tv-full tr.top1 td { color: #f3d38f; font-weight: 800; }
 .tv-full .plus { color: #9fe0b5; font-size: .75em; }
+.tv-full .podium { display: flex; align-items: flex-end; gap: 2vw; }
+.tv-full .step { width: 18vw; text-align: center; }
+.tv-full .step .who { font-size: 3.6vh; font-weight: 800; margin-bottom: 1vh; }
+.tv-full .step .pts { font-size: 2.6vh; color: #a9d4bc; margin-bottom: 1vh; }
+.tv-full .step .block { background: #2c5a45; color: #dff3e7; font-size: 8vh; font-weight: 800; border-radius: 1vh 1vh 0 0; display: flex; align-items: flex-start; justify-content: center; padding-top: 1vh; }
+.tv-full .step.s1 .block { height: 26vh; background: #5a9a7a; }
+.tv-full .step.s2 .block { height: 19vh; }
+.tv-full .step.s3 .block { height: 14vh; }
+.tv-full .step.s1 .who { color: #f3d38f; font-size: 4.4vh; }
+.tv-full .step.empty { visibility: hidden; }
 .tv-wait { position: fixed; left: 50%; bottom: 3vh; transform: translateX(-50%); background: rgba(0,0,0,.7); padding: 1vh 2vh; border-radius: 1vh; font-size: 2.2vh; color: #ddd; }
 .tv-fs {
   position: fixed; right: 2vh; top: 2vh; font-size: 2vh; background: rgba(0,0,0,.6); color: #fff; border: 1px solid #555;
@@ -613,6 +623,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
       <li>„Pause“ hält die Uhr an und zeigt den QR-Code wieder auf dem Fernseher – z. B. wenn jemand rausgeflogen ist. „Weiter“ setzt mit der Restzeit fort.</li>
       <li>„Eingabe schließen“ (oder die Zeit läuft ab) – die Engine bewertet alle Züge: 2 Punkte für einen guten Zug, 1 Punkt für einen kleinen Verlust.</li>
       <li>Auf dem Fernseher Auflösung oder Tabelle zeigen, dann „Fertig – nächste Frage“.</li>
+      <li>Zum Schluss „Quiz beenden – Endergebnis zeigen“: Siegertreppchen auf dem Fernseher, jeder sieht seinen Platz auf dem Handy. Während des Quiz sehen die Spieler ihre Platzierung nicht.</li>
     </ol>
     <p style="margin-top:12px">Das TV-Fenster zeigt nur das Brett. Fenster auf den Fernseher ziehen und dort doppelklicken (oder F11) für Vollbild. Tasten im TV-Fenster werden an dieses Fenster weitergeleitet.</p>
     <div class="row"><button id="helpClose" class="primary">OK</button></div>
@@ -787,9 +798,9 @@ if (IS_TV) {
     const side = $('#tvSide'), full = $('#tvFull'), row = $('#tvRow');
     quizDeadline = null;
     if (!q) { side.hidden = full.hidden = true; row.hidden = false; return; }
-    if (q.phase === 'lobby' || q.phase === 'table') {
+    if (q.phase === 'lobby' || q.phase === 'table' || q.phase === 'final') {
       row.hidden = true; side.hidden = true; full.hidden = false;
-      full.innerHTML = q.phase === 'lobby' ? lobbyHtml(q) : tableHtml(q);
+      full.innerHTML = q.phase === 'lobby' ? lobbyHtml(q) : q.phase === 'final' ? finalHtml(q) : tableHtml(q);
       return;
     }
     full.hidden = true; row.hidden = false; side.hidden = false;
@@ -819,6 +830,17 @@ if (IS_TV) {
         <div class="howto">Mitspielen: QR-Code mit dem Handy scannen<br>oder im Browser öffnen:
           <div class="url">${esc(q.url || '')}</div><br>Raum-Code<div class="code">${esc(q.code || '')}</div></div></div>
       <div class="names">${names || '<span style="background:none;color:#b9c4bd">Noch niemand dabei …</span>'}</div>`;
+  }
+  function finalHtml(q) {
+    const rows = q.rows || [];
+    const podium = [2, 1, 3].map(rank => {
+      const names = rows.filter(r => r.rank === rank && r.total > 0);
+      if (!names.length) return `<div class="step s${rank} empty"></div>`;
+      return `<div class="step s${rank}"><div class="who">${names.map(r => esc(r.name)).join('<br>')}</div>
+        <div class="pts">${names[0].total} P.</div><div class="block">${rank}</div></div>`;
+    }).join('');
+    const rest = rows.filter(r => r.rank > 3 || r.total === 0).map(r => `<tr><td class="r">${r.rank}.</td><td>${esc(r.name)}</td><td class="r">${r.total}</td></tr>`).join('');
+    return `<h1>Endergebnis</h1><div class="podium">${podium}</div>${rest ? `<table>${rest}</table>` : ''}`;
   }
   function tableHtml(q) {
     const rows = (q.rows || []).map(r => `<tr class="${r.rank === 1 && r.total > 0 ? 'top1' : ''}"><td class="r">${r.rank}.</td><td>${esc(r.name)}</td>
@@ -1890,6 +1912,7 @@ else {
     const q = st.question;
     const total = st.players.length;
     const answered = q ? Object.keys(q.answers).length : 0;
+    if (st.finished && QZ.tv !== 'lobby') return { phase: 'final', rows: st.players.slice(0, 30).map(p => ({ rank: p.rank, name: p.name, total: p.total })) };
     const table = () => ({ phase: 'table', rows: st.players.slice(0, 30).map(p => ({ rank: p.rank, name: p.name, total: p.total, last: p.last })) });
     if (q && q.status === 'open' && q.paused) {
       const url = quizUrl();
@@ -2028,7 +2051,8 @@ else {
   }
   function setTvView(v) {
     const q = QZ.st && QZ.st.question;
-    if (q && q.status === 'done') { if (v === 'lobby') { quizNext(); QZ.tv = 'lobby'; } else QZ.tvDone = v; }
+    if (QZ.st && QZ.st.finished) QZ.tv = v;
+    else if (q && q.status === 'done') { if (v === 'lobby') { quizNext(); QZ.tv = 'lobby'; } else QZ.tvDone = v; }
     else QZ.tv = v;
     renderQuiz(); syncTv();
   }
@@ -2079,9 +2103,21 @@ else {
     else h.push(`<div class="addr">${esc(url)}${addrs.length > 1 ? ` <button data-act="addr" title="Andere Netzwerkadresse verwenden">Netz wechseln</button>` : ''}</div>`);
 
     const q = st.question;
+    if (st.finished) {
+      const rows = st.players.map(p => `<span>${p.rank}.</span><span class="nm">${esc(p.name)}</span><span><b>${p.total}</b></span><span></span>`).join('');
+      h.push(`<div class="qhead">Quiz beendet <span class="pill ok">${st.rounds} Fragen</span></div>
+        <p>Der Fernseher zeigt das Endergebnis, die Spieler sehen ihren Platz auf dem Handy.</p>
+        <div class="plist">${rows}</div>
+        <div class="qrow"><span>Fernseher zeigt:</span></div>
+        <div class="tvsel"><button data-tv="final" class="${QZ.tv !== 'lobby' ? 'on' : ''}">Endergebnis</button><button data-tv="lobby" class="${QZ.tv === 'lobby' ? 'on' : ''}">QR-Code</button></div>
+        <div class="qrow"><button class="grow" data-act="continue" title="Quiz fortsetzen – die Punkte bleiben erhalten">Weiterspielen</button><button class="grow" data-act="close-pool">Spielrunde schließen</button></div>`);
+      pane.innerHTML = h.join('');
+      return;
+    }
     if (!q) {
       h.push(`<div class="qrow"><span>Fernseher zeigt:</span></div>${tvBtns(QZ.tv)}`);
       h.push(`<button class="qbtn go" data-act="ask">Zug abfragen (aktuelle Stellung)</button>`);
+      if (st.rounds > 0) h.push(`<button class="qbtn" data-act="finish">Quiz beenden – Endergebnis zeigen</button>`);
     } else if (q.status === 'open' && q.paused) {
       const n = Object.keys(q.answers).length;
       const rest = q.remaining != null ? `${Math.floor(q.remaining / 60000)}:${String(Math.round(q.remaining / 1000) % 60).padStart(2, '0')} übrig` : 'ohne Zeitlimit';
@@ -2109,7 +2145,8 @@ else {
       h.push(`<div class="qhead">Ergebnis <span class="pill ok">Engine: ${esc(fmtSan(r.bestSan || '–', settings.notation))}</span></div>
         <div class="mvlist">${rows || '<span>Keine Antworten</span>'}</div>
         <div class="qrow"><span>Fernseher zeigt:</span></div>${tvBtns(QZ.tvDone)}
-        <div class="qrow"><button class="qbtn go grow" data-act="next">Fertig – nächste Frage</button></div>`);
+        <div class="qrow"><button class="qbtn go grow" data-act="next">Fertig – nächste Frage</button></div>
+        <button class="qbtn" data-act="finish">Quiz beenden – Endergebnis zeigen</button>`);
     }
 
     const plist = st.players.map(p => {
@@ -2136,6 +2173,8 @@ else {
     else if (act === 'ask') quizAsk();
     else if (act === 'close') qsend({ t: 'close' });
     else if (act === 'pause') qsend({ t: 'pause' });
+    else if (act === 'finish') { if (confirm('Quiz beenden und das Endergebnis zeigen?')) { qsend({ t: 'finish' }); QZ.tv = 'final'; } }
+    else if (act === 'continue') { qsend({ t: 'continue' }); QZ.tv = 'board'; }
     else if (act === 'resume') qsend({ t: 'resume' });
     else if (act === 'extend') qsend({ t: 'extend', seconds: 30 });
     else if (act === 'next') quizNext();

@@ -29,6 +29,7 @@ const Q = {
   question: null,        // { id, fen, side, deadline, status: 'open'|'closed'|'done', answers: Map(id -> answer), results }
   history: [],           // abgeschlossene Fragen (für Tabelle und spätere Auswertung)
   trainers: new Set(),   // verbundene Trainer-Fenster
+  finished: false,       // Quiz beendet: Endergebnis wird gezeigt
   seq: 0,
 };
 let closeTimer = null;
@@ -81,6 +82,7 @@ function trainerState() {
       results: q.results || null,
     },
     rounds: Q.history.length,
+    finished: Q.finished,
   };
 }
 function toTrainers() {
@@ -90,7 +92,8 @@ function toTrainers() {
 function playerState(p) {
   const q = Q.question;
   const st = standings().find(s => s.id === p.id);
-  const base = { t: 'state', now: Date.now(), name: p.name, total: p.total, rank: st ? st.rank : null, of: Q.players.size };
+  const base = { t: 'state', now: Date.now(), name: p.name, total: p.total };
+  if (Q.finished) return { ...base, phase: 'final', rank: st ? st.rank : null, of: Q.players.size, rounds: Q.history.length };
   if (!q) return { ...base, phase: 'wait' };
   const a = q.answers.get(p.id) || null;
   if (q.status === 'open' && q.paused) return { ...base, phase: 'paused', answer: a };
@@ -149,7 +152,7 @@ function closePool() {
   Q.pool.stop(true);
   Q.pool = null;
   Q.players.clear(); Q.byToken.clear();
-  Q.question = null; Q.history = [];
+  Q.question = null; Q.history = []; Q.finished = false;
   clearTimeout(closeTimer);
   log('Spielrunde geschlossen.');
 }
@@ -219,6 +222,7 @@ function onTrainerMessage(ws, raw) {
         let c;
         try { c = new Chess(String(m.fen)); } catch { return; }
         if (c.isGameOver()) return;
+        Q.finished = false;
         const secs = Math.max(0, Math.min(600, +m.seconds || 0));
         Q.question = {
           id: 'q' + (++Q.seq), fen: c.fen(), side: c.turn() === 'w' ? 'white' : 'black',
@@ -278,6 +282,15 @@ function onTrainerMessage(ws, raw) {
         break;
       }
       case 'next': Q.question = null; clearTimeout(closeTimer); break;
+      case 'finish': {
+        // Quiz beenden: offene Frage verwerfen, Endergebnis an alle
+        if (Q.question && Q.question.status !== 'done') return;
+        Q.question = null; clearTimeout(closeTimer);
+        Q.finished = true;
+        log(`Quiz beendet nach ${Q.history.length} Fragen.`);
+        break;
+      }
+      case 'continue': Q.finished = false; break;
       case 'rename': {
         const p = Q.players.get(m.id);
         const name = cleanName(m.name);
