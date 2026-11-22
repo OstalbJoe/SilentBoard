@@ -451,7 +451,8 @@ html.tv.hide-cursor body, html.tv.hide-cursor body * { cursor: none !important; 
 .tv-side .dist .who { grid-column: 2 / span 2; font-size: 2vh; color: #b9c4bd; margin-top: -.8vh; }
 .tv-side .tag { display: inline-block; font-size: 1.8vh; background: #2c5a45; color: #a9d4bc; border-radius: 2vh; padding: .2vh 1vh; margin-left: 1vh; vertical-align: middle; }
 .tv-side .facts { border-top: .2vh solid #3c4640; padding-top: 1.5vh; color: #d6dcd8; }
-.tv-side .legend { display: flex; flex-direction: column; gap: 1vh; }
+.tv-side .legend { display: flex; flex-direction: column; gap: 1vh; padding-bottom: 1.8vh; border-bottom: .2vh solid #3c4640; color: #d6dcd8; }
+.tv-side .dist .mv.rest { font-weight: 600; color: #b9c4bd; }
 .tv-side .legend .lg { display: inline-block; width: 4.5vh; height: 1vh; border-radius: .5vh; margin-right: 1.2vh; vertical-align: middle; }
 .tv-side .legend .lg.green { background: #15781b; } .tv-side .legend .lg.blue { background: #003088; box-shadow: 0 0 0 .15vh #6f8fd6; }
 .tv-full { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3vh; background: var(--tvbg); padding: 4vh 6vw; }
@@ -913,12 +914,14 @@ if (IS_TV) {
       const max = Math.max(1, ...q.moves.map(m => m.count));
       const rows = q.moves.map(m => `<span class="mv">${esc(m.san)}${m.isGame ? '<span class="tag">Partiezug</span>' : ''}</span>
         <div><div class="b p${m.points == null ? 'n' : m.points}" style="width:${Math.max(6, Math.round(100 * m.count / max))}%"></div></div>
-        <span class="n">${m.count}</span>${m.names ? `<div class="who">${esc(m.names)}</div>` : ''}`).join('');
+        <span class="n">${m.count}</span>${m.names ? `<div class="who">${esc(m.names)}</div>` : ''}`).join('')
+        + (q.rest ? `<span class="mv rest">+ ${q.rest.moves} weitere</span>
+        <div><div class="b pn" style="width:${Math.min(100, Math.max(6, Math.round(100 * q.rest.count / max)))}%"></div></div><span class="n">${q.rest.count}</span>` : '');
       const legend = [];
       if (q.goodSans && q.goodSans.length) legend.push(`<div><i class="lg green"></i>Gute Züge (Engine): <b>${q.goodSans.map(esc).join(', ')}</b></div>`);
       if (q.gameSan) legend.push(`<div><i class="lg blue"></i>Partiezug: <b>${esc(q.gameSan)}</b>${q.gameIsGood ? ' – auch ein guter Zug' : ''}</div>`);
-      side.innerHTML = `<h2>Eure Züge</h2><div class="dist">${rows || '<span>Keine Antworten</span>'}</div>
-        <div class="facts legend">${legend.join('')}</div>`;
+      side.innerHTML = `<h2>Eure Züge</h2>${legend.length ? `<div class="legend">${legend.join('')}</div>` : ''}
+        <div class="dist">${rows || '<span>Keine Antworten</span>'}</div>`;
     }
   }
   function lobbyHtml(q) {
@@ -2036,6 +2039,7 @@ else {
     return QZ.qrSvg;
   }
 
+  const TV_ROWS = 6;
   function quizTvState() {
     const st = QZ.st;
     if (!QZ.avail || !st || !st.pool.open) return null;
@@ -2054,17 +2058,24 @@ else {
       if (QZ.tvDone === 'table') return table();
       if (QZ.tvDone === 'board') return null;
       const r = q.results || {};
-      const moves = (r.moves || []).map(m => ({
+      const good = r.good || [];
+      const gameUci = r.gameUci || q.gameUci || '';
+      // auf dem TV höchstens TV_ROWS Zeilen: gute Züge und Partiezug zuerst, dann die häufigsten
+      const all = r.moves || [];
+      const keep = new Set(all.filter(m => m.uci && (m.isGame || good.some(g => g.uci === m.uci))).slice(0, TV_ROWS));
+      for (const m of all) if (keep.size < TV_ROWS) keep.add(m);
+      const rest = all.filter(m => !keep.has(m));
+      const moves = all.filter(m => keep.has(m)).map(m => ({
         san: fmtSan(m.san, settings.notation), count: m.count, points: m.points, isGame: m.isGame,
         names: settings.quizTvNames ? m.names : '',
       }));
-      const good = r.good || [];
-      const gameUci = r.gameUci || q.gameUci || '';
-      const arrow = (u, brush) => ({ orig: u.slice(0, 2), dest: u.slice(2, 4), brush });
-      const arrows = good.filter(g => g.uci !== gameUci).map(g => arrow(g.uci, 'green'));
-      if (gameUci) arrows.push(arrow(gameUci, 'blue'));
+      const arrow = (u, brush, w) => ({ orig: u.slice(0, 2), dest: u.slice(2, 4), brush, modifiers: { lineWidth: w } });
+      const arrows = good.filter(g => g.uci !== gameUci).map(g => arrow(g.uci, 'green', 10));
+      // Partiezug schmaler und obenauf, damit ein grüner Pfeil auf derselben Linie sichtbar bleibt
+      if (gameUci) arrows.push(arrow(gameUci, 'blue', 6));
       return {
         phase: 'reveal', moves, arrows,
+        rest: rest.length ? { moves: rest.length, count: rest.reduce((n, m) => n + m.count, 0) } : null,
         goodSans: good.map(g => fmtSan(g.san, settings.notation)),
         gameSan: fmtSan(r.gameSan || '', settings.notation),
         gameIsGood: !!gameUci && good.some(g => g.uci === gameUci),
