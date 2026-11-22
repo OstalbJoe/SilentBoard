@@ -27,8 +27,12 @@ Die Programmdatei gibt es unter **Releases** in diesem Repository:
 | Windows | `SilentBoard-windows.exe` | Doppelklick. Beim ersten Start warnt Windows („Unbekannter Herausgeber“): „Weitere Informationen → Trotzdem ausführen“. |
 | Linux | `SilentBoard-linux` | Einmal ausführbar machen (Dateieigenschaften → „Als Programm ausführen“), dann starten. |
 
-SilentBoard öffnet sich im Browser. Das kleine Fenster mit „SilentBoard läuft“ offen lassen – Schließen beendet
-SilentBoard. Internet wird nur zum Laden von Lichess-Links gebraucht. Kurzanleitung: im Programm auf **?** klicken.
+SilentBoard öffnet sich im Browser. Internet wird nur zum Laden von Lichess-Links gebraucht.
+Kurzanleitung: im Programm auf **?** klicken.
+
+**Beenden:** Schließt du den Browser, beendet sich SilentBoard nach 10 Sekunden von selbst. Ist im Quiz eine
+Spielrunde offen, fragt der Browser vorher nach und SilentBoard läuft weiter, damit Spieler und Punkte erhalten
+bleiben – erneut starten holt alles zurück. „⏻ Beenden“ oben rechts beendet SilentBoard jederzeit sofort.
 
 Unter Linux legt `bash werkzeuge/linux-menueeintrag.sh /pfad/zu/SilentBoard-linux` einen Eintrag mit Logo in der App-Übersicht an.
 

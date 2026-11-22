@@ -217,8 +217,14 @@ function onTrainerMessage(ws, raw) {
   try {
     switch (m.t) {
       case 'hello': ws.send(JSON.stringify(trainerState())); return;
+      case 'quit': {
+        const bye = JSON.stringify({ t: 'bye' });
+        for (const t of Q.trainers) t.send(bye);
+        quit('Knopf „SilentBoard beenden“');
+        return;
+      }
       case 'pool-open': openPool(); break;
-      case 'pool-close': closePool(); break;
+      case 'pool-close': closePool(); checkAutoExit(); break;
       case 'ask': {
         if (!Q.pool) return;
         let c;
@@ -327,6 +333,38 @@ function onTrainerMessage(ws, raw) {
 /* ------------------------------------------------------------------ */
 /* Lokaler Server (nur dieser Rechner)                                 */
 /* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
+/* Automatisches Beenden                                               */
+/* Ohne Spielrunde gilt: Browser zu = SilentBoard zu. Mit offener      */
+/* Spielrunde läuft es weiter, damit Spieler und Punkte erhalten bleiben. */
+/* ------------------------------------------------------------------ */
+const views = new Set();        // offene TV-Fenster (Trainer-Fenster stehen in Q.trainers)
+const EXIT_GRACE = 10_000;      // so lange warten, damit ein Neuladen (F5) nichts beendet
+const START_WAIT = 120_000;     // öffnet sich gar kein Browserfenster, nach dieser Zeit beenden
+let everOpened = false, exitTimer = null;
+
+function windowCount() { return Q.trainers.size + views.size; }
+function checkAutoExit() {
+  clearTimeout(exitTimer); exitTimer = null;
+  if (windowCount() > 0 || !everOpened) return;
+  if (Q.pool) {
+    log('Alle SilentBoard-Fenster sind zu, die Spielrunde ist aber offen – SilentBoard läuft weiter. Erneut starten holt alles zurück.');
+    return;
+  }
+  log(`Kein SilentBoard-Fenster mehr offen – SilentBoard beendet sich in ${EXIT_GRACE / 1000} Sekunden …`);
+  exitTimer = setTimeout(() => quit('Browser geschlossen'), EXIT_GRACE);
+}
+function windowOpened() {
+  if (exitTimer) log('Fenster wieder offen – SilentBoard läuft weiter.');
+  clearTimeout(exitTimer); exitTimer = null;
+  everOpened = true;
+}
+function quit(reason) {
+  if (Q.pool) closePool();
+  log(`SilentBoard beendet (${reason}).`);
+  setTimeout(() => process.exit(0), 300);
+}
+
 const PAGE = APP_HTML.replace('<!--@@PROGRAMM@@-->', '<script>window.SB_PROGRAM = true;</script>');
 function startLocal(port) {
   const origins = new Set([`http://127.0.0.1:${port}`, `http://localhost:${port}`]);
@@ -342,6 +380,12 @@ function startLocal(port) {
         if (server.upgrade(req, { data: { role: 'trainer' } })) return;
         return new Response('Upgrade erwartet', { status: 400 });
       }
+      if (url.pathname === '/ws/fenster') {
+        // TV-Fenster melden sich hier nur an, damit SilentBoard weiß, dass sie offen sind
+        if (!origins.has(req.headers.get('origin') || '')) return new Response('Verboten', { status: 403 });
+        if (server.upgrade(req, { data: { role: 'view' } })) return;
+        return new Response('Upgrade erwartet', { status: 400 });
+      }
       if (url.pathname === '/' || url.pathname === '/index.html') {
         return new Response(PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
       }
@@ -349,9 +393,13 @@ function startLocal(port) {
     },
     websocket: {
       maxPayloadLength: 256 * 1024,
-      open(ws) { Q.trainers.add(ws); ws.send(JSON.stringify(trainerState())); },
-      message: onTrainerMessage,
-      close(ws) { Q.trainers.delete(ws); },
+      open(ws) {
+        windowOpened();
+        if (ws.data.role === 'view') { views.add(ws); return; }
+        Q.trainers.add(ws); ws.send(JSON.stringify(trainerState()));
+      },
+      message(ws, raw) { if (ws.data.role === 'trainer') onTrainerMessage(ws, raw); },
+      close(ws) { Q.trainers.delete(ws); views.delete(ws); checkAutoExit(); },
     },
   });
 }
@@ -379,8 +427,13 @@ async function main() {
   console.log('');
   console.log('  SilentBoard läuft.  © 2026 ostalbweb.de · GPL-3.0');
   console.log(`  Im Browser: ${url}`);
-  console.log('  Dieses Fenster offen lassen – Schließen beendet SilentBoard.');
+  console.log('');
+  console.log('  Schließt du den Browser, beendet sich SilentBoard von selbst.');
+  console.log('  Ist im Quiz eine Spielrunde offen, läuft es weiter, bis du sie schließt.');
+  console.log('  Dieses Fenster zu schließen beendet SilentBoard sofort.');
   console.log('');
   if (!process.env.SB_NO_BROWSER) openBrowser(url);
+  // Öffnet sich gar kein Browserfenster, nicht ewig im Hintergrund weiterlaufen
+  setTimeout(() => { if (!everOpened) quit(`kein Browserfenster innerhalb von ${START_WAIT / 60000} Minuten`); }, START_WAIT);
 }
 main();
