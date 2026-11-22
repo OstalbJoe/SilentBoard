@@ -347,7 +347,7 @@ function onMove(orig, dest) {
     try { m = chess.move({ from: orig, to: dest, promotion: promo || 'q' }); } catch { m = null; }
     if (!m) { setupBoard(state.question, true); return; }
     pending = { uci: m.from + m.to + (m.promotion || ''), san: m.san };
-    $('#qChosen').innerHTML = 'Dein Zug: <b></b> – bestätigen oder „Zurück“ für einen anderen Zug';
+    $('#qChosen').innerHTML = 'Dein Zug: <b></b>';
     $('#qChosen b').textContent = de(m.san);
     $('#qOk').disabled = false;
     $('#qOk').textContent = de(m.san) + ' bestätigen';

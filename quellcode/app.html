@@ -509,7 +509,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
   <main class="pmain" id="pmain">
     <div class="board-col" id="boardCol">
       <div class="board-row">
-        <div class="evalbar" id="evalbar" title="Engine-Bewertung (nur hier sichtbar)"><div class="w" id="evalW"></div><div class="mid"></div></div>
+        <div class="evalbar" id="evalbar" title="Engine-Bewertung"><div class="w" id="evalW"></div><div class="mid"></div></div>
         <div class="board-holder" id="boardHolder">
           <div id="board" class="cg-wrap"></div>
           <div id="promo" hidden><div class="choices" id="promoChoices"></div></div>
@@ -570,7 +570,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
         <section class="card notes" id="notesBox">
           <div class="pane" id="paneNotes">
           <div class="lbl">Eigene Analyse <span class="where" id="notesWhere"></span></div>
-          <textarea id="noteText" spellcheck="true" placeholder="Kommentar zu diesem Zug schreiben … (nur hier sichtbar, nicht auf dem TV)"></textarea>
+          <textarea id="noteText" spellcheck="true" placeholder="Kommentar zu diesem Zug …"></textarea>
           <div class="row" id="nagRow" title="Zug bewerten (nochmal klicken = entfernen)">
             <button class="nagbtn" data-nag="3" title="sehr guter Zug">!!</button>
             <button class="nagbtn" data-nag="1" title="guter Zug">!</button>
@@ -581,7 +581,6 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
             <span class="grow"></span>
             <button id="savePgnBtn" class="primary" title="Partie mit allen Kommentaren und eigenen Varianten als PGN-Datei speichern">PGN speichern</button>
           </div>
-          <div class="hint" id="notesHint">Änderungen merkt sich SilentBoard automatisch. „PGN speichern“ legt eine Datei an.</div>
           </div>
         </section>
 
@@ -613,8 +612,8 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
               <label><input type="checkbox" data-opt="tvLast"> Letzter Zug</label>
               <label><input type="checkbox" data-opt="tvCoords"> Koordinaten</label>
               <label title="Mit Rechtsklick gezeichnete Pfeile/Kreise auf dem TV zeigen"><input type="checkbox" data-opt="tvArrows"> Meine Pfeile</label>
-              <label title="Grüner Pfeil für den nächsten Partiezug – nur auf deinem Brett"><input type="checkbox" data-opt="nextArrow"> Partiezug-Pfeil (nur hier)</label>
-              <label title="Blauer Pfeil für den Engine-Zug – nur auf deinem Brett"><input type="checkbox" data-opt="engArrow"> Engine-Pfeil (nur hier)</label>
+              <label title="Grüner Pfeil für den nächsten Partiezug auf deinem Brett"><input type="checkbox" data-opt="nextArrow"> Partiezug-Pfeil</label>
+              <label title="Blauer Pfeil für den Engine-Zug auf deinem Brett"><input type="checkbox" data-opt="engArrow"> Engine-Pfeil</label>
               <label>Notation
                 <select class="mini" id="notationSel">
                   <option value="de">Deutsch (Sf3)</option>
@@ -699,7 +698,8 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
     <h3 style="margin-top:14px">Quiz</h3>
     <p>Oben rechts „Modus: Quiz“ wählen – die Spieler raten dann den nächsten Zug auf dem Handy:</p>
     <ol style="margin:0 0 8px 18px;padding:0;font-size:14px">
-      <li>„Spielrunde öffnen“ – erst jetzt ist SilentBoard im WLAN für Handys erreichbar. Der Fernseher zeigt QR-Code und Raum-Code.</li>
+      <li>„Spielrunde öffnen“ – erst jetzt ist SilentBoard im WLAN für Handys erreichbar. Der Fernseher zeigt QR-Code und Raum-Code.
+        Unter Windows fragt die Firewall beim ersten Mal nach: „Private Netzwerke“ erlauben.</li>
       <li>Spieler scannen den QR-Code und geben ihren Namen ein. Laptop und Handys müssen im selben WLAN sein.</li>
       <li>Zur gewünschten Stellung gehen und „Zug abfragen“ klicken. Die Spieler tippen ihren Zug und bestätigen ihn.</li>
       <li>„Pause“ hält die Uhr an und zeigt den QR-Code wieder auf dem Fernseher – z. B. wenn jemand rausgeflogen ist. „Weiter“ setzt mit der Restzeit fort.</li>
@@ -1723,8 +1723,8 @@ else {
     }
     $('#notesWhere').textContent = n.san ? `nach ${moveNoText(n)} ${fmt(n.san)}` : 'zur ganzen Partie (vor dem 1. Zug)';
     ta.placeholder = n.san
-      ? 'Kommentar zu diesem Zug schreiben … (nur hier sichtbar, nicht auf dem TV)'
-      : 'Einleitung zur Partie schreiben … (nur hier sichtbar)';
+      ? 'Kommentar zu diesem Zug …'
+      : 'Einleitung zur Partie …';
     for (const b of document.querySelectorAll('#nagRow .nagbtn')) {
       b.disabled = !n.san;
       b.classList.toggle('on', n.nags.includes(+b.dataset.nag));
@@ -2209,7 +2209,7 @@ else {
 
   /* ---- Spieler als Kacheln ---- */
   function playerTiles(st, q) {
-    if (!st.players.length) return '<p class="empty">Noch niemand verbunden – auf dem Fernseher den QR-Code zeigen.</p>';
+    if (!st.players.length) return '<p class="empty">Noch niemand verbunden.</p>';
     const running = q && q.status === 'open';
     return `<div class="tiles">${st.players.map(p => {
       const a = q && q.answers[p.id];
@@ -2234,9 +2234,7 @@ else {
     const st = QZ.st;
     if (!QZ.connected || !st) { pane.innerHTML = '<div class="qmid"><p>Verbinde mit dem SilentBoard-Programm …</p></div>'; return; }
     if (!st.pool.open) {
-      pane.innerHTML = `<div class="qmid"><div class="qhead">Einstellungen</div>${settingsHtml(false)}
-        <p class="hint">Oben rechts „Spielrunde öffnen“ – erst dann ist SilentBoard für Handys im WLAN erreichbar.
-        Unter Windows fragt die Firewall beim ersten Mal nach: „Private Netzwerke“ erlauben.</p></div>`;
+      pane.innerHTML = `<div class="qmid"><div class="qhead">Einstellungen</div>${settingsHtml(false)}</div>`;
       return;
     }
     const q = st.question, total = st.players.length;
@@ -2494,7 +2492,7 @@ else {
     const score = $('#engScore');
     let barLine = null;
     if (!settings.engOn) {
-      status.textContent = 'Engine aus (nur hier sichtbar)';
+      status.textContent = 'Engine aus';
       score.textContent = '–';
       pvs.innerHTML = '';
     } else if (Engine.failed) {
