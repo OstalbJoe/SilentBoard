@@ -308,6 +308,7 @@ select.mini { padding: 1px 4px; border-radius: 4px; border: 1px solid var(--line
 .quiz .tvsel button { padding: 4px 2px; font-size: 12px; }
 .quiz .tvsel button.on { border-color: var(--qgreen); color: var(--qlight); background: var(--qdark); }
 .quiz .set { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
+.quiz .set select, .set select { padding: 2px 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; color: var(--text); }
 .quiz .set input { width: 64px; padding: 2px 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; color: var(--text); }
 .quiz .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
 .quiz .bar > div { height: 100%; background: var(--qgreen); }
@@ -711,7 +712,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
       <li>Zur gewünschten Stellung gehen und „Zug abfragen“ klicken. Die Spieler tippen ihren Zug und bestätigen ihn.</li>
       <li>„Pause“ hält die Uhr an und zeigt den QR-Code wieder auf dem Fernseher – z. B. wenn jemand rausgeflogen ist. „Weiter“ setzt mit der Restzeit fort.</li>
       <li>„Abbrechen (nicht werten)“ verwirft eine laufende Frage samt aller abgegebenen Züge – z. B. wenn du versehentlich dieselbe Stellung noch einmal abgefragt hast.</li>
-      <li>„Eingabe schließen“ (oder die Zeit läuft ab) – die Engine bewertet alle Züge: 2 Punkte für einen guten Zug, 1 Punkt für einen etwas ungenauen Zug.</li>
+      <li>„Eingabe schließen“ (oder die Zeit läuft ab) – die Engine bewertet alle Züge: 2 Punkte für einen guten Zug, 1 Punkt für einen etwas ungenauen Zug. Unter ⚙ lässt sich einstellen, ob nach Gewinnchance, nach Bauern oder nach beidem gewertet wird – bei „beidem“ muss ein Zug beide Grenzen einhalten.</li>
       <li>Auf dem Fernseher Auflösung oder Tabelle zeigen, dann „Fertig – nächste Frage“.</li>
       <li>Zum Schluss „Quiz beenden – Endergebnis zeigen“: Siegertreppchen auf dem Fernseher, jeder sieht seinen Platz auf dem Handy. Während des Quiz sehen die Spieler ihre Platzierung nicht.</li>
     </ol>
@@ -1062,7 +1063,7 @@ else {
     notation: 'de', engOn: true, engLines: 3,
     tvNames: true, tvTurn: true, tvLast: true, tvCoords: true, tvArrows: true,
     nextArrow: true, engArrow: true,
-    mode: 'analyse', quizSecs: 60, quizGood: 3, quizOk: 10, quizTvNames: true,
+    mode: 'analyse', quizSecs: 60, quizGood: 3, quizOk: 10, quizGoodCp: 0.5, quizOkCp: 1.5, quizMetric: 'both', quizTvNames: true,
   };
   const settings = Object.assign({}, DEFAULTS, store.get('settings', {}));
   const saveSettings = () => store.set('settings', settings);
@@ -2147,32 +2148,40 @@ else {
       // die drei besten Züge auf einmal bewerten
       const best = await QuizEngine.search(q.fen, null, 3);
       const wcBest = winChance(best);
+      const pawnsBest = pawnsOf(best);
+      // Verlust eines Zugs: wc = an Gewinnchance (%), cp = in Bauern
+      const lossOf = l => ({ wc: Math.max(0, (wcBest - winChance(l)) * 50), cp: Math.max(0, pawnsBest - pawnsOf(l)) });
       const lineLoss = new Map();
-      for (const l of best.lines) if (l.pv[0] && !lineLoss.has(l.pv[0])) lineLoss.set(l.pv[0], Math.max(0, (wcBest - winChance(l)) * 50));
-      // gute Züge laut Engine (höchstens 3): nicht schlechter als die 2-Punkte-Grenze
-      const good = [...lineLoss].filter(([, l]) => l <= settings.quizGood).slice(0, 3).map(([u]) => ({ uci: u, san: sanOf(u) }));
+      for (const l of best.lines) if (l.pv[0] && !lineLoss.has(l.pv[0])) lineLoss.set(l.pv[0], lossOf(l));
+      const pointsOf = l => {
+        const byWc = l.wc <= settings.quizGood ? 2 : l.wc <= settings.quizOk ? 1 : 0;
+        const byCp = l.cp <= settings.quizGoodCp ? 2 : l.cp <= settings.quizOkCp ? 1 : 0;
+        return settings.quizMetric === 'wc' ? byWc : settings.quizMetric === 'cp' ? byCp : Math.min(byWc, byCp);
+      };
+      const catOf = l => ['big', 'small', 'good'][pointsOf(l)];
+      // gute Züge laut Engine (höchstens 3): innerhalb der 2-Punkte-Grenze
+      const good = [...lineLoss].filter(([, l]) => pointsOf(l) === 2).slice(0, 3).map(([u]) => ({ uci: u, san: sanOf(u) }));
       QZ.evalProg.done++; renderQuiz();
       const loss = {};
       for (const u of ucis) {
         if (lineLoss.has(u)) loss[u] = lineLoss.get(u);
-        else { const r = await QuizEngine.search(q.fen, u); loss[u] = Math.max(0, (wcBest - winChance(r)) * 50); }
+        else loss[u] = lossOf(await QuizEngine.search(q.fen, u));
         QZ.evalProg.done++; renderQuiz();
       }
       const chess = new Chess(q.fen);
-      const pointsOf = l => (l <= settings.quizGood ? 2 : l <= settings.quizOk ? 1 : 0);
-      const catOf = l => (l <= settings.quizGood ? 'good' : l <= settings.quizOk ? 'small' : 'big');
+      const r1 = x => Math.round(x * 10) / 10;
       const names = new Map(st.players.map(p => [p.id, p.name]));
       const players = {}, byMove = new Map();
       for (const [id, a] of entries) {
         if (a.dontKnow || !a.uci) { players[id] = { points: 0, cat: 'dont', isGame: false }; continue; }
         const l = loss[a.uci];
-        players[id] = { points: pointsOf(l), cat: catOf(l), isGame: a.uci === q.gameUci, loss: Math.round(l * 10) / 10 };
-        if (!byMove.has(a.uci)) byMove.set(a.uci, { uci: a.uci, san: a.san, count: 0, loss: Math.round(l * 10) / 10, points: pointsOf(l), isGame: a.uci === q.gameUci, ids: [] });
+        players[id] = { points: pointsOf(l), cat: catOf(l), isGame: a.uci === q.gameUci, loss: r1(l.wc) };
+        if (!byMove.has(a.uci)) byMove.set(a.uci, { uci: a.uci, san: a.san, count: 0, loss: r1(l.wc), lossCp: r1(l.cp), points: pointsOf(l), isGame: a.uci === q.gameUci, ids: [] });
         const m = byMove.get(a.uci); m.count++; m.ids.push(id);
       }
       const dont = entries.filter(([, a]) => a.dontKnow).map(([id]) => id);
-      const moves = [...byMove.values()].sort((a, b) => b.count - a.count || a.loss - b.loss)
-        .map(m => ({ uci: m.uci, san: m.san, count: m.count, loss: m.loss, points: m.points, isGame: m.isGame, names: m.ids.map(i => names.get(i)).filter(Boolean).join(', ') }));
+      const moves = [...byMove.values()].sort((a, b) => b.count - a.count || b.points - a.points || a.loss - b.loss)
+        .map(m => ({ uci: m.uci, san: m.san, count: m.count, loss: m.loss, lossCp: m.lossCp, points: m.points, isGame: m.isGame, names: m.ids.map(i => names.get(i)).filter(Boolean).join(', ') }));
       if (dont.length) moves.push({ uci: '', san: 'Weiß nicht', count: dont.length, loss: null, points: null, isGame: false, names: dont.map(i => names.get(i)).filter(Boolean).join(', ') });
       void chess;
       if (!QZ.st.question || QZ.st.question.id !== q.id) { QZ.evalProg = null; renderQuiz(); return; }   // inzwischen abgebrochen
@@ -2240,13 +2249,22 @@ else {
     return `${open ? '<div class="t">Raum</div>' : ''}
       <div class="set">
         <span>Zeit pro Frage (Sekunden, 0 = ohne)</span><input type="number" min="0" max="600" step="10" data-set="quizSecs" value="${settings.quizSecs}">
-        <span>2 Punkte bis Verlust von (%)</span><input type="number" min="0" max="50" step="1" data-set="quizGood" value="${settings.quizGood}">
-        <span>1 Punkt bis Verlust von (%)</span><input type="number" min="0" max="80" step="1" data-set="quizOk" value="${settings.quizOk}">
+        <span>Bewertung nach</span><select data-qsel="quizMetric">${[['both', 'Gewinnchance und Bauern'], ['wc', 'nur Gewinnchance'], ['cp', 'nur Bauern']]
+          .map(([v, t]) => `<option value="${v}"${settings.quizMetric === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
+        ${settings.quizMetric !== 'cp' ? `<span>2 Punkte bis Verlust (%)</span><input type="number" min="0" max="50" step="1" data-set="quizGood" value="${settings.quizGood}">
+        <span>1 Punkt bis Verlust (%)</span><input type="number" min="0" max="80" step="1" data-set="quizOk" value="${settings.quizOk}">` : ''}
+        ${settings.quizMetric !== 'wc' ? `<span>2 Punkte bis Verlust (Bauern)</span><input type="number" min="0" max="10" step="0.1" data-set="quizGoodCp" value="${settings.quizGoodCp}">
+        <span>1 Punkt bis Verlust (Bauern)</span><input type="number" min="0" max="10" step="0.1" data-set="quizOkCp" value="${settings.quizOkCp}">` : ''}
       </div>
       <label class="chk"><input type="checkbox" data-qopt="quizTvNames" ${settings.quizTvNames ? 'checked' : ''}> Namen bei der Lösung auf dem TV zeigen</label>
       ${open ? `<div>Adresse für die Handys:</div>
         <div class="addr">${esc(url || 'kein WLAN gefunden')}${addrs.length > 1 ? ' <button data-act="addr">Netz wechseln</button>' : ''}</div>
         <button class="danger" data-act="close-pool" title="Alle Handys werden getrennt, die Punkte gelöscht">Raum schließen</button>` : ''}`;
+  }
+  function lossText(m) {
+    if (m.loss == null) return '';
+    const wc = m.loss + ' %', cp = m.lossCp == null ? '' : '−' + m.lossCp.toFixed(1).replace('.', ',') + ' B.';
+    return settings.quizMetric === 'wc' || !cp ? wc : settings.quizMetric === 'cp' ? cp : `${wc} · ${cp}`;
   }
   function renderQuizHead() {
     const st = QZ.st, head = $('#quizHead');
@@ -2338,7 +2356,7 @@ else {
         <div class="qrow"><button class="qbtn go grow" data-act="next">Fertig – nächste Frage</button><button data-act="finish">Quiz beenden</button></div>`);
       const rows = r.moves.map(m => `<span class="pts p${m.points == null ? 0 : m.points}">${m.points == null ? '–' : m.points}</span>
         <span><b>${esc(fmtSan(m.san, settings.notation))}</b>${m.isGame ? '<span class="gm">Partiezug</span>' : ''}</span>
-        <span>${m.loss == null ? '' : m.loss + ' %'}</span><span>${m.count}×</span>
+        <span>${lossText(m)}</span><span>${m.count}×</span>
         <span></span><span class="who" style="grid-column: 2 / span 3">${esc(m.names || '')}</span>`).join('');
       mid.push(`<div class="mvlist">${rows || '<span>Keine Antworten</span>'}</div>`, playerTiles(st, q));
       tv = { cur: QZ.tvDone, opts: [['reveal', 'Lösung'], ['table', 'Tabelle'], ['board', 'Brett'], ['lobby', 'QR-Code']] };
@@ -2389,9 +2407,18 @@ else {
   function onQuizChange(e) {
     const k = e.target.dataset.set, o = e.target.dataset.qopt;
     if (o) { settings[o] = e.target.checked; saveSettings(); syncTv(); renderQuiz(); syncNamesBox(); return; }
+    const sel = e.target.dataset.qsel;
+    if (sel) {
+      settings[sel] = e.target.value; saveSettings();
+      // passende Grenzen ein- bzw. ausblenden
+      if (!$('#qzSet').hidden) $('#qzSet').innerHTML = settingsHtml(true);
+      renderQuiz(); return;
+    }
     if (!k) return;
-    settings[k] = Math.max(0, Math.round(+e.target.value || 0));
+    const cp = k === 'quizGoodCp' || k === 'quizOkCp';
+    settings[k] = Math.max(0, cp ? Math.round((+String(e.target.value).replace(',', '.') || 0) * 10) / 10 : Math.round(+e.target.value || 0));
     if (settings.quizOk < settings.quizGood) settings.quizOk = settings.quizGood;
+    if (settings.quizOkCp < settings.quizGoodCp) settings.quizOkCp = settings.quizGoodCp;
     saveSettings();
   }
   for (const el of [$('#paneQuiz'), $('#quizHead'), $('#qzSet')]) {
@@ -2540,6 +2567,12 @@ else {
     if (l.mate != null) return (l.mate > 0 ? '#' : '#-') + Math.abs(l.mate);
     const v = l.cp / 100;
     return (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1);
+  }
+  // Bewertung in Bauern aus Sicht der Seite am Zug; ab ±10 Bauern (und bei Matt) ist alles entschieden
+  function pawnsOf(l) {
+    if (!l) return 0;
+    if (l.mate != null) return l.mate > 0 ? 10 : -10;
+    return Math.max(-10, Math.min(10, (l.cp || 0) / 100));
   }
   function winChance(l) {
     if (!l) return 0;

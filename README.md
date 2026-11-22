@@ -44,11 +44,13 @@ selben WLAN), der Trainer fragt Stellungen ab, die Engine bewertet jeden abgegeb
 
 | Zug | Punkte |
 |---|---|
-| „Guter Zug“ (Verlust an Gewinnchance bis 3 %) | 2 |
-| „Etwas ungenau“ (Verlust bis 10 %) | 1 |
+| „Guter Zug“ (Verlust an Gewinnchance bis 3 % und bis 0,5 Bauern) | 2 |
+| „Etwas ungenau“ (Verlust bis 10 % und bis 1,5 Bauern) | 1 |
 | „Leider daneben“ (größerer Verlust), „Weiß nicht“ | 0 |
 
-Die Grenzen sind einstellbar. Wer den Partiezug errät, wird markiert, bekommt dafür aber keine Extrapunkte.
+Ein Zug muss beide Grenzen einhalten: Die Gewinnchance ist in ausgeglichenen Stellungen fair, die Bauern-Grenze sorgt
+dafür, dass auch in klar gewonnenen oder verlorenen Stellungen ein Figureneinsteller keine Punkte bekommt. Unter ⚙
+lässt sich auch nur nach Gewinnchance oder nur nach Bauern werten; alle Grenzen sind einstellbar. Wer den Partiezug errät, wird markiert, bekommt dafür aber keine Extrapunkte.
 Unter Windows fragt die Firewall beim ersten Öffnen eines Raums nach – „Private Netzwerke“ erlauben.
 
 ## Selbst bauen
