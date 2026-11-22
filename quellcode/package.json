@@ -1,17 +1,21 @@
 {
   "name": "silentboard",
   "private": true,
-  "description": "Schachpartien im Training vorführen: Trainer sieht Züge/Kommentare/Engine, der Fernseher nur das Brett.",
+  "description": "Schachpartien im Training vorführen: Trainer sieht Züge/Kommentare/Engine, der Fernseher nur das Brett. Mit Quiz für die Handys der Spieler.",
   "scripts": {
-    "build": "esbuild entry.js --bundle --minify --format=iife --target=es2020 --outfile=libs.js && node build.mjs"
+    "build": "esbuild entry.js --bundle --minify --format=iife --target=es2020 --outfile=libs.js && node build.mjs",
+    "seiten": "esbuild entry.js --bundle --minify --format=iife --target=es2020 --outfile=libs.js && node build.mjs --nur-seiten",
+    "start": "npm run seiten && bun programm.mjs"
   },
   "dependencies": {
     "chess.js": "1.4.0",
     "chessground": "9.2.1",
+    "qrcode-generator": "2.0.4",
     "stockfish": "19.0.1"
   },
   "devDependencies": {
     "@resvg/resvg-js": "2.6.2",
+    "bun": "1.4.5",
     "esbuild": "0.28.2"
   },
   "license": "GPL-3.0-or-later",

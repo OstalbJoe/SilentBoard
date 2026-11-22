@@ -2,5 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { Chessground } from 'chessground';
 import { Chess } from 'chess.js';
+import qrcode from 'qrcode-generator';
 window.Chessground = Chessground;
 window.Chess = Chess;
+window.qrcode = qrcode;

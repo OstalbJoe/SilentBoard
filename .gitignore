@@ -2,8 +2,7 @@
 node_modules/
 
 # Build-Ergebnisse – werden mit "npm run build" erzeugt und als GitHub-Release angehängt
-/SilentBoard.html
-/web/
+/dist/
 quellcode/libs.js
 
 # Sonstiges
