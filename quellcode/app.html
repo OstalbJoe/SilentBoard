@@ -1221,7 +1221,7 @@ else {
     s = s.trim();
     let m = s.match(/lichess\.org\/(?:study|broadcast\/[^\/\s]+\/[^\/\s]+)\/([A-Za-z0-9]{8})(?:\/([A-Za-z0-9]{8}))?/);
     if (m) return { kind: 'study', study: m[1], chapter: m[2] };
-    m = s.match(/lichess\.org\/(?:game\/export\/)?([A-Za-z0-9]{8})([A-Za-z0-9]{4})?(?:\/(white|black))?\/?(?:[?#].*)?$/);
+    m = s.match(/lichess\.org\/(?:embed\/)?(?:game\/(?:export\/)?)?([A-Za-z0-9]{8})([A-Za-z0-9]{4})?(?:\/(white|black))?\/?(?:[?#].*)?$/);   // auch …/game/…, …/game/export/…, …/embed/…
     if (m && !NOT_GAME_IDS.has(m[1])) {
       const ply = /#(\d+)/.exec(s);
       return { kind: 'game', id: m[1], color: m[3] || null, ply: ply ? +ply[1] : null };
