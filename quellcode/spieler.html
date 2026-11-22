@@ -52,6 +52,9 @@ input:focus { outline: none; border-color: var(--green); }
 .btn { display: block; width: 100%; padding: 15px; font-size: 18px; font-weight: 700; border-radius: 12px; border: 1px solid var(--line); background: var(--btn); cursor: pointer; }
 .btn.pri { background: var(--green); border-color: var(--green); color: #fff; }
 .btn:disabled { opacity: .45; }
+/* Erinnerung „Bestätigen nicht vergessen“: roter Rahmen leuchtet auf und wieder weg */
+@keyframes nudge { 0%, 100% { box-shadow: 0 0 0 0 rgba(220, 45, 45, 0); } 50% { box-shadow: 0 0 0 4px rgba(220, 45, 45, .95); } }
+.btn.nudge { animation: nudge 1.2s ease-in-out infinite; }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .err { color: var(--bad); font-size: 15px; min-height: 1.2em; margin-top: 8px; }
 .top { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 18px; }
@@ -321,8 +324,10 @@ function setupBoard(q, force) {
   if (boardFen === q.fen && !force && cg) return;
   boardFen = q.fen;
   pending = null;
+  stopNudge();
   $('#qOk').disabled = true;
   $('#qOk').textContent = 'Bestätigen';
+  $('#qDont').textContent = 'Weiß nicht';
   $('#qChosen').innerHTML = 'Tippe eine Figur an und dann das Zielfeld.';
   const chess = new Chess(q.fen);
   const cfg = {
@@ -342,12 +347,14 @@ function onMove(orig, dest) {
     try { m = chess.move({ from: orig, to: dest, promotion: promo || 'q' }); } catch { m = null; }
     if (!m) { setupBoard(state.question, true); return; }
     pending = { uci: m.from + m.to + (m.promotion || ''), san: m.san };
-    $('#qChosen').innerHTML = 'Dein Zug: <b></b> – noch einmal ziehen zum Ändern';
+    $('#qChosen').innerHTML = 'Dein Zug: <b></b> – bestätigen oder „Zurück“ für einen anderen Zug';
     $('#qChosen b').textContent = de(m.san);
     $('#qOk').disabled = false;
     $('#qOk').textContent = de(m.san) + ' bestätigen';
-    // Brett wieder auf die Ausgangsstellung, damit man einen anderen Zug probieren kann
-    setTimeout(() => cg.set({ fen: boardFen, lastMove: [m.from, m.to], movable: { color: state.question.side, dests: destsOf(new Chess(boardFen)) } }), 350);
+    $('#qDont').textContent = '↶ Zurück';
+    // Zug bleibt auf dem Brett stehen; weitere Züge erst nach „Zurück“
+    cg.set({ fen: chess.fen(), turnColor: state.question.side, lastMove: [m.from, m.to], movable: { color: undefined, dests: new Map() } });
+    startNudge();
   };
   if (p && p.type === 'p' && (dest[1] === '8' || dest[1] === '1')) askPromotion(p.color === 'w' ? 'white' : 'black').then(finish);
   else finish();
@@ -368,13 +375,28 @@ function askPromotion(color) {
 $('#qOk').onclick = () => {
   if (!pending || !state || state.phase !== 'question') return;
   send({ t: 'answer', qid: state.question.id, uci: pending.uci });
-  editing = false; pending = null;
+  editing = false; pending = null; stopNudge();
 };
 $('#qDont').onclick = () => {
   if (!state || state.phase !== 'question') return;
+  if (pending) { setupBoard(state.question, true); return; }   // „↶ Zurück“: Zug zurücknehmen, neu ziehen
   send({ t: 'answer', qid: state.question.id, dontKnow: true });
-  editing = false; pending = null;
+  editing = false; pending = null; stopNudge();
 };
+
+/* ---------- Erinnerung ans Bestätigen ---------- */
+const NUDGE_AFTER = 5000;   // nach so vielen Millisekunden ohne Bestätigen leuchtet der Knopf rot
+let nudgeTimer = 0;
+function startNudge() {
+  stopNudge();
+  if (secondsLeft() <= 10) { $('#qOk').classList.add('nudge'); return; }
+  nudgeTimer = setTimeout(() => { if (pending) $('#qOk').classList.add('nudge'); }, NUDGE_AFTER);
+}
+function stopNudge() { clearTimeout(nudgeTimer); $('#qOk').classList.remove('nudge'); }
+function secondsLeft() {
+  const q = state && state.phase === 'question' && state.question;
+  return q && q.deadline ? Math.max(0, Math.round((q.deadline - (Date.now() + offset)) / 1000)) : Infinity;
+}
 
 /* ---------- Uhr ---------- */
 setInterval(() => {
@@ -385,6 +407,7 @@ setInterval(() => {
   el.hidden = false;
   el.textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
   el.classList.toggle('low', left <= 10);
+  if (left <= 10 && pending) $('#qOk').classList.add('nudge');
 }, 250);
 
 connect();
