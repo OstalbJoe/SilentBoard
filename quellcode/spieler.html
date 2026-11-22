@@ -117,6 +117,12 @@ input:focus { outline: none; border-color: var(--green); }
     <button class="btn pri" id="joinBtn">Mitspielen</button>
   </section>
 
+  <!-- Wiederverbinden (schon angemeldet) -->
+  <section class="card" id="vConnect" hidden style="text-align:center">
+    <h2>Verbinde …</h2>
+    <div class="spin"></div>
+  </section>
+
   <!-- Warten -->
   <section class="card" id="vWait" hidden style="text-align:center">
     <svg class="okmark" viewBox="0 0 96 96" aria-hidden="true">
@@ -216,7 +222,7 @@ let ws = null, state = null, offset = 0, editing = false, pending = null, qid = 
 let cg = null;
 
 function show(id) {
-  for (const v of ['vJoin', 'vWait', 'vPause', 'vQuestion', 'vSent', 'vResult', 'vFinal', 'vEnd']) $('#' + v).hidden = v !== id;
+  for (const v of ['vJoin', 'vConnect', 'vWait', 'vPause', 'vQuestion', 'vSent', 'vResult', 'vFinal', 'vEnd']) $('#' + v).hidden = v !== id;
 }
 
 /* ---------- Verbindung ---------- */
@@ -251,7 +257,12 @@ function onError(err) {
     $('#codeLbl').hidden = $('#code').hidden = false;
     $('#joinErr').textContent = code ? 'Der Raum-Code stimmt nicht.' : 'Bitte den Raum-Code vom Fernseher eingeben.';
     show('vJoin');
-  } else if (err === 'name') { $('#joinErr').textContent = 'Bitte einen Namen eingeben.'; show('vJoin'); }
+  } else if (err === 'name') {
+    // gespeicherte Anmeldung ist dem Raum unbekannt (z. B. Raum neu geöffnet): neu anmelden
+    if (token) { token = null; store.del('token'); $('#joinErr').textContent = ''; }
+    else $('#joinErr').textContent = 'Bitte einen Namen eingeben.';
+    show('vJoin');
+  }
   else if (err === 'full') { $('#joinErr').textContent = 'Der Raum ist voll.'; show('vJoin'); }
 }
 
@@ -265,13 +276,14 @@ $('#joinBtn').onclick = () => {
   if (!name) { $('#joinErr').textContent = 'Bitte einen Namen eingeben.'; return; }
   store.set('name', name);
   $('#joinErr').textContent = '';
-  send({ t: 'join', code, name });
+  send({ t: 'join', code, name, token: store.get('token') || undefined });   // gleiches Handy = gleicher Spieler
 };
 $('#name').addEventListener('keydown', e => { if (e.key === 'Enter') $('#joinBtn').click(); });
 
 /* ---------- Anzeige ---------- */
 function render() {
   if (ended) return;
+  if (token && !state) { show('vConnect'); return; }   // schon angemeldet: Verbindung kommt gleich
   if (!token || !state) { show('vJoin'); setTimeout(() => $('#name').focus(), 50); return; }
   const s = state;
   if (s.phase === 'wait') { editing = false; $('#waitNote').hidden = !s.cancelled; show('vWait'); return; }
