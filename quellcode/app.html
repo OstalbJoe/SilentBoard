@@ -2307,10 +2307,8 @@ else {
       mid.push(`<div class="mvlist">${rows || '<span>Keine Antworten</span>'}</div>`, playerTiles(st, q));
       tv = { cur: QZ.tvDone, opts: [['reveal', 'Lösung'], ['table', 'Tabelle'], ['board', 'Brett'], ['lobby', 'QR-Code']] };
     }
-    const namesBtn = q && q.status === 'done'
-      ? `<label class="chk" title="Namen bei der Lösung auf dem TV zeigen"><input type="checkbox" data-qopt="quizTvNames" ${settings.quizTvNames ? 'checked' : ''}> Namen</label>` : '';
     const tvRow = tv
-      ? `<span>TV:</span><div class="tvsel">${tv.opts.map(([k, l]) => `<button data-tv="${k}" class="${tv.cur === k ? 'on' : ''}">${l}</button>`).join('')}</div>${namesBtn}${freezeBtn}`
+      ? `<span>TV:</span><div class="tvsel">${tv.opts.map(([k, l]) => `<button data-tv="${k}" class="${tv.cur === k ? 'on' : ''}">${l}</button>`).join('')}</div>${freezeBtn}`
       : `<span>TV: zeigt ${q && q.paused ? 'den QR-Code (Pause)' : q && q.status === 'closed' ? '„Auswertung läuft“' : 'die Frage'}</span><span class="grow" style="flex:1"></span>${freezeBtn}`;
     pane.innerHTML = `<div class="qbar">${bar.join('')}</div><div class="qmid">${mid.join('')}</div><div class="qtv">${tvRow}</div>`;
   }
