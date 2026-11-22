@@ -271,6 +271,8 @@ select.mini { padding: 1px 4px; border-radius: 4px; border: 1px solid var(--line
 .quiz .tile.sel { outline: 2px solid var(--accent); }
 .quiz .tile .acts { display: flex; gap: 4px; margin-top: 3px; }
 .quiz .tile .acts button { padding: 0 6px; font-size: 11px; line-height: 1.7; }
+.quiz .qtv .frz { white-space: nowrap; font-size: 12px; padding: 4px 8px; }
+.quiz .qtv .frz.on { background: var(--warn); border-color: var(--warn); color: #1b1300; }
 .quiz .linkbtn { background: none; border: 0; color: var(--muted); padding: 2px 4px; font-size: 12px; text-decoration: underline; }
 .quiz .linkbtn:hover { color: var(--bad); }
 .quiz .empty { color: var(--muted); }
@@ -820,7 +822,7 @@ if (IS_TV) {
     drawable: { enabled: false, visible: true },
     addDimensionsCssVarsTo: $('#tvStage'),
   });
-  let state = null, lastJson = '', lastMsg = 0;
+  let state = null, lastJson = '', lastMsg = 0, ended = false;   // ended: vom Trainer getrennt
 
   function layout() {
     const showBars = !state || state.opts.names || state.opts.turn || state.opts.last;
@@ -951,7 +953,14 @@ if (IS_TV) {
   }
 
   function onMsg(d) {
-    if (!d || d.app !== APP || d.type !== 'state') return;
+    if (d && d.app === APP && d.type === 'close-tv') {
+      window.close();   // klappt bei Fenstern, die SilentBoard selbst geöffnet hat
+      ended = true;
+      try { presenceWs && presenceWs.close(); } catch { /* egal */ }
+      setTimeout(() => { $('#tvWait').textContent = 'TV getrennt – dieses Fenster kann geschlossen werden.'; $('#tvWait').hidden = false; }, 300);
+      return;
+    }
+    if (!d || d.app !== APP || d.type !== 'state' || ended) return;
     lastMsg = Date.now();
     $('#tvWait').hidden = true;
     applyCoords(d.state);
@@ -968,18 +977,21 @@ if (IS_TV) {
     try { if (window.opener && !window.opener.closed) { window.opener.postMessage(msg, MSG_TARGET); return; } } catch { /* Trainer-Fenster nicht erreichbar – stattdessen BroadcastChannel versuchen */ }
     if (bc) bc.postMessage(msg);
   }
-  const hello = () => send({ type: 'hello' });
+  const hello = () => { if (!ended) send({ type: 'hello' }); };
   hello();
   // Im SilentBoard-Programm: als offenes Fenster melden (damit es sich nicht beendet, solange der TV läuft)
+  let presenceWs = null;
   function presence() {
     if (!window.SB_PROGRAM) return;
+    if (ended) return;
     const w = new WebSocket(`ws://${location.host}/ws/fenster`);
-    w.onclose = () => setTimeout(presence, 3000);
+    w.onclose = () => { if (!ended) setTimeout(presence, 3000); };
+    presenceWs = w;
   }
   presence();
   setInterval(() => {
     hello();
-    if (Date.now() - lastMsg > 6000) $('#tvWait').hidden = false;
+    if (!ended && Date.now() - lastMsg > 6000) $('#tvWait').hidden = false;
   }, 2000);
 
   // Tasten an den Trainer weiterleiten (z. B. wenn das TV-Fenster den Fokus hat)
@@ -1518,6 +1530,7 @@ else {
   function toggleFreeze() {
     S.frozen = !S.frozen;
     render();
+    renderQuiz();
   }
   function toggleEngine() {
     settings.engOn = !settings.engOn;
@@ -1925,14 +1938,23 @@ else {
       d.classList.toggle('frozen', on && S.frozen);
     }
     $('#tvBtnText').textContent = on ? (S.frozen ? 'TV eingefroren' : 'TV verbunden') : 'TV-Fenster öffnen';
+    $('#tvBtn').title = on ? 'Klicken: TV-Fenster schließen' : 'Öffnet ein zweites Fenster nur mit dem Brett – auf den Fernseher ziehen';
   }
   setInterval(updateTvStatus, 1000);
 
   function openTv() {
-    if (tvWin && !tvWin.closed) { tvWin.focus(); return; }
+    // Ist ein TV verbunden, schließt ein Klick das TV-Fenster wieder
+    if (tvConnected() || (tvWin && !tvWin.closed)) { closeTv(); return; }
     const url = location.href.split('#')[0] + '#tv';
     tvWin = window.open(url, 'silentboard-tv', 'popup=yes,width=1000,height=780');
     if (!tvWin) showMsg('Der Browser hat das Fenster blockiert. Bitte Pop-ups für diese Seite erlauben und nochmal klicken.', 'err');
+  }
+
+  function closeTv() {
+    try { if (tvWin && !tvWin.closed) tvWin.close(); } catch { /* schon zu */ }
+    send({ type: 'close-tv' });   // auch ein von Hand geöffnetes TV-Fenster schließt sich
+    tvWin = null; tvSeen = 0;
+    updateTvStatus();
   }
 
   const seenKeys = new Set();
@@ -2230,12 +2252,14 @@ else {
   function renderQuiz() {
     renderQuizHead();
     const pane = $('#paneQuiz');
+    const freezeBtn = `<button data-act="freeze" class="frz ${S.frozen ? 'on' : ''}" title="TV behält die aktuelle Stellung, während du hier weiterklickst (P)">${S.frozen ? '▶ Freigeben' : '❄ Einfrieren'}</button>`;
     if (settings.mode !== 'quiz') return;
     if (!QZ.avail) { pane.innerHTML = '<div class="qmid"><p>Das Quiz braucht das SilentBoard-Programm.</p></div>'; return; }
     const st = QZ.st;
     if (!QZ.connected || !st) { pane.innerHTML = '<div class="qmid"><p>Verbinde mit dem SilentBoard-Programm …</p></div>'; return; }
     if (!st.pool.open) {
-      pane.innerHTML = `<div class="qmid"><div class="qhead">Einstellungen</div>${settingsHtml(false)}</div>`;
+      pane.innerHTML = `<div class="qmid"><div class="qhead">Einstellungen</div>${settingsHtml(false)}</div>
+        <div class="qtv"><span>TV: zeigt das Brett</span><span class="grow" style="flex:1"></span>${freezeBtn}</div>`;
       return;
     }
     const q = st.question, total = st.players.length;
@@ -2286,8 +2310,8 @@ else {
     const namesBtn = q && q.status === 'done'
       ? `<label class="chk" title="Namen bei der Lösung auf dem TV zeigen"><input type="checkbox" data-qopt="quizTvNames" ${settings.quizTvNames ? 'checked' : ''}> Namen</label>` : '';
     const tvRow = tv
-      ? `<span>TV:</span><div class="tvsel">${tv.opts.map(([k, l]) => `<button data-tv="${k}" class="${tv.cur === k ? 'on' : ''}">${l}</button>`).join('')}</div>${namesBtn}`
-      : `<span>TV: zeigt ${q && q.paused ? 'den QR-Code (Pause)' : q && q.status === 'closed' ? '„Auswertung läuft“' : 'die Frage'}</span>`;
+      ? `<span>TV:</span><div class="tvsel">${tv.opts.map(([k, l]) => `<button data-tv="${k}" class="${tv.cur === k ? 'on' : ''}">${l}</button>`).join('')}</div>${namesBtn}${freezeBtn}`
+      : `<span>TV: zeigt ${q && q.paused ? 'den QR-Code (Pause)' : q && q.status === 'closed' ? '„Auswertung läuft“' : 'die Frage'}</span><span class="grow" style="flex:1"></span>${freezeBtn}`;
     pane.innerHTML = `<div class="qbar">${bar.join('')}</div><div class="qmid">${mid.join('')}</div><div class="qtv">${tvRow}</div>`;
   }
   setInterval(() => { const el = document.getElementById('qzLeft'); const q = QZ.st && QZ.st.question; if (el && q) el.textContent = clockText(q.deadline); }, 500);
@@ -2307,6 +2331,7 @@ else {
     else if (act === 'ask') quizAsk();
     else if (act === 'close') qsend({ t: 'close' });
     else if (act === 'pause') qsend({ t: 'pause' });
+    else if (act === 'freeze') toggleFreeze();
     else if (act === 'cancel') {
       const q = QZ.st.question, n = q ? Object.keys(q.answers).length : 0;
       if (confirm(`Frage abbrechen? ${n === 1 ? 'Der abgegebene Zug wird verworfen, ' : n > 1 ? `Die ${n} abgegebenen Züge werden verworfen, ` : ''}es gibt keine Punkte.`)) {
