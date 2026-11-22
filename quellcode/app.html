@@ -287,6 +287,9 @@ select.mini { padding: 1px 4px; border-radius: 4px; border: 1px solid var(--line
 .quiz .pill { border-radius: 10px; padding: 1px 8px; font-size: 12px; font-weight: 700; }
 .quiz .pill.run { background: var(--warn); color: #1b1300; }
 .quiz .pill.ok { background: var(--qdark); color: var(--qlight); }
+.quiz .engtop { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+.quiz .engtop .eng { border-radius: 10px; padding: 1px 8px; background: var(--panel-2); color: var(--text); font-variant-numeric: tabular-nums; }
+.quiz .engtop .eng.p2 { background: var(--qdark); color: var(--qlight); }
 .quiz .plist { display: grid; grid-template-columns: 1fr auto auto auto; gap: 2px 8px; align-items: center; }
 .quiz .plist .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .quiz .plist .off { color: var(--muted); }
@@ -872,6 +875,7 @@ if (IS_TV) {
     return { html: html.join(''), toMove: o.turn && toMove };
   }
 
+  let boardVisible = true;
   function apply(s) {
     const json = JSON.stringify(s);
     if (json === lastJson) return;
@@ -894,6 +898,10 @@ if (IS_TV) {
     }
     renderQuizTv(s.quiz);
     layout();
+    // War das Brett ausgeblendet (Tabelle, QR-Code), neu zeichnen – sonst landen Pfeile in der Brettmitte
+    const visible = $('#tvBoard').offsetWidth > 0;
+    if (visible && !boardVisible) cg.redrawAll();
+    boardVisible = visible;
   }
 
   /* ---- Quiz auf dem Fernseher ---- */
@@ -927,7 +935,7 @@ if (IS_TV) {
         + (q.rest ? `<span class="mv rest">+ ${q.rest.moves} weitere</span>
         <div><div class="b pn" style="width:${Math.min(100, Math.max(6, Math.round(100 * q.rest.count / max)))}%"></div></div><span class="n">${q.rest.count}</span>` : '');
       const legend = [];
-      if (q.goodSans && q.goodSans.length) legend.push(`<div><i class="lg green"></i>Gute Züge (Engine): <b>${q.goodSans.map(esc).join(', ')}</b></div>`);
+      if (q.goodSans && q.goodSans.length) legend.push(`<div><i class="lg green"></i>Gute Züge: <b>${q.goodSans.map(esc).join(', ')}</b></div>`);
       if (q.gameSan) legend.push(`<div><i class="lg blue"></i>Partiezug: <b>${esc(q.gameSan)}</b>${q.gameIsGood ? ' – auch ein guter Zug' : ''}</div>`);
       side.innerHTML = `<h2>Eure Züge</h2>${legend.length ? `<div class="legend">${legend.join('')}</div>` : ''}
         <div class="dist">${rows || '<span>Keine Antworten</span>'}</div>`;
@@ -2188,6 +2196,12 @@ else {
       const catOf = l => ['big', 'small', 'good'][pointsOf(l)];
       // gute Züge laut Engine (höchstens 3): innerhalb der 2-Punkte-Grenze
       const good = [...lineLoss].filter(([, l]) => pointsOf(l) === 2).slice(0, 3).map(([u]) => ({ uci: u, san: sanOf(u) }));
+      // die drei besten Züge der Engine für den Trainer (Bewertung aus Sicht von Weiß)
+      const sign = q.side === 'black' ? -1 : 1;
+      const top = best.lines.filter(l => l.pv[0]).slice(0, 3).map(l => ({
+        uci: l.pv[0], san: sanOf(l.pv[0]), cp: l.cp == null ? null : l.cp * sign, mate: l.mate == null ? null : l.mate * sign,
+        points: pointsOf(lineLoss.get(l.pv[0])),
+      }));
       QZ.evalProg.done++; renderQuiz();
       const loss = {};
       for (const u of ucis) {
@@ -2212,7 +2226,7 @@ else {
       if (dont.length) moves.push({ uci: '', san: 'Weiß nicht', count: dont.length, loss: null, points: null, isGame: false, names: dont.map(i => names.get(i)).filter(Boolean).join(', ') });
       void chess;
       if (!QZ.st.question || QZ.st.question.id !== q.id) { QZ.evalProg = null; renderQuiz(); return; }   // inzwischen abgebrochen
-      qsend({ t: 'results', qid: q.id, results: { players, moves, good, bestSan: best.pv[0] ? sanOf(best.pv[0]) : '', gameSan: q.gameUci ? sanOf(q.gameUci) : '', gameUci: q.gameUci || '' } });
+      qsend({ t: 'results', qid: q.id, results: { players, moves, good, top, bestSan: best.pv[0] ? sanOf(best.pv[0]) : '', gameSan: q.gameUci ? sanOf(q.gameUci) : '', gameUci: q.gameUci || '' } });
       QZ.tvDone = 'reveal';
     } catch (err) {
       console.error(err);
@@ -2378,8 +2392,8 @@ else {
       mid.push(playerTiles(st, q));
     } else {
       const r = q.results || { moves: [] };
-      const goodTxt = (r.good || []).map(g => fmtSan(g.san, settings.notation)).join(', ') || fmtSan(r.bestSan || '–', settings.notation);
-      bar.push(`<div class="qhead">Ergebnis <span class="pill ok">Gute Züge: ${esc(goodTxt)}</span></div>
+      const top = (r.top || []).map(t => `<span class="eng p${t.points}"><b>${esc(fmtSan(t.san, settings.notation))}</b> ${fmtScore(t)}</span>`).join('');
+      bar.push(`<div class="qhead">Ergebnis</div>${top ? `<div class="engtop">Engine: ${top}</div>` : ''}
         <div class="qrow"><button class="qbtn go grow" data-act="next">Fertig – nächste Frage</button><button data-act="finish">Quiz beenden</button></div>`);
       const rows = r.moves.map(m => `<span class="pts p${m.points == null ? 0 : m.points}">${m.points == null ? '–' : m.points}</span>
         <span><b>${esc(fmtSan(m.san, settings.notation))}</b>${m.isGame ? '<span class="gm">Partiezug</span>' : ''}</span>

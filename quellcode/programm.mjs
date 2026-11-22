@@ -297,8 +297,11 @@ function onTrainerMessage(ws, raw) {
         const isUci = u => typeof u === 'string' && /^[a-h][1-8][a-h][1-8][qrbn]?$/.test(u);
         const good = (Array.isArray(r.good) ? r.good : []).filter(g => g && isUci(g.uci)).slice(0, 3)
           .map(g => ({ uci: g.uci, san: String(g.san || '').slice(0, 12) }));
+        const num = v => (Number.isFinite(+v) && v !== null ? Math.round(+v) : null);
+        const top = (Array.isArray(r.top) ? r.top : []).filter(t => t && isUci(t.uci)).slice(0, 3)
+          .map(t => ({ uci: t.uci, san: String(t.san || '').slice(0, 12), cp: num(t.cp), mate: num(t.mate), points: Math.max(0, Math.min(2, num(t.points) || 0)) }));
         q.results = {
-          players, good, bestSan: String(r.bestSan || '').slice(0, 12), gameSan: String(r.gameSan || '').slice(0, 12),
+          players, good, top, bestSan: String(r.bestSan || '').slice(0, 12), gameSan: String(r.gameSan || '').slice(0, 12),
           gameUci: isUci(r.gameUci) ? r.gameUci : '', moves: Array.isArray(r.moves) ? r.moves.slice(0, 60) : [],
         };
         q.status = 'done';
