@@ -82,6 +82,11 @@ input:focus { outline: none; border-color: var(--green); }
 .kv:last-child { border-bottom: 0; }
 .kv b { font-size: 18px; }
 .muted { color: var(--muted); font-size: 14px; text-align: center; }
+.okmark { width: 110px; height: 110px; display: block; margin: 6px auto 10px; }
+.okmark circle { fill: #3e9a5c; }
+.okmark path { fill: none; stroke: #fff; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 70; stroke-dashoffset: 70; animation: okdraw .45s .15s ease-out forwards; }
+@keyframes okdraw { to { stroke-dashoffset: 0; } }
 .spin { width: 34px; height: 34px; border: 4px solid var(--line); border-top-color: var(--green); border-radius: 50%; margin: 10px auto; animation: r 1s linear infinite; }
 @keyframes r { to { transform: rotate(360deg); } }
 #promo { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 50; }
@@ -113,11 +118,14 @@ input:focus { outline: none; border-color: var(--green); }
   </section>
 
   <!-- Warten -->
-  <section class="card" id="vWait" hidden>
+  <section class="card" id="vWait" hidden style="text-align:center">
+    <svg class="okmark" viewBox="0 0 96 96" aria-hidden="true">
+      <circle cx="48" cy="48" r="44"/>
+      <path d="M27 50 l14 14 l28 -30"/>
+    </svg>
     <h2>Du bist dabei</h2>
     <p id="waitNote" hidden style="color:var(--text)"><b>Die letzte Frage wurde abgebrochen – sie zählt nicht.</b></p>
     <p>Warte, bis der Trainer eine Stellung abfragt. Das Handy einfach offen lassen.</p>
-    <div class="spin"></div>
   </section>
 
   <!-- Frage -->
