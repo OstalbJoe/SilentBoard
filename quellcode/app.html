@@ -612,6 +612,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
               <label><input type="checkbox" data-opt="tvLast"> Letzter Zug</label>
               <label><input type="checkbox" data-opt="tvCoords"> Koordinaten</label>
               <label title="Mit Rechtsklick gezeichnete Pfeile/Kreise auf dem TV zeigen"><input type="checkbox" data-opt="tvArrows"> Meine Pfeile</label>
+              <label title="Im Quiz: Namen bei der Lösung auf dem TV zeigen"><input type="checkbox" data-opt="quizTvNames"> Namen bei der Quiz-Lösung</label>
               <label title="Grüner Pfeil für den nächsten Partiezug auf deinem Brett"><input type="checkbox" data-opt="nextArrow"> Partiezug-Pfeil</label>
               <label title="Blauer Pfeil für den Engine-Zug auf deinem Brett"><input type="checkbox" data-opt="engArrow"> Engine-Pfeil</label>
               <label>Notation
@@ -2185,7 +2186,7 @@ else {
         <span>2 Punkte bis Verlust von (%)</span><input type="number" min="0" max="50" step="1" data-set="quizGood" value="${settings.quizGood}">
         <span>1 Punkt bis Verlust von (%)</span><input type="number" min="0" max="80" step="1" data-set="quizOk" value="${settings.quizOk}">
       </div>
-      <label class="chk"><input type="checkbox" data-qopt="quizTvNames" ${settings.quizTvNames ? 'checked' : ''}> Namen bei der Auflösung auf dem TV zeigen</label>
+      <label class="chk"><input type="checkbox" data-qopt="quizTvNames" ${settings.quizTvNames ? 'checked' : ''}> Namen bei der Lösung auf dem TV zeigen</label>
       ${open ? `<div>Adresse für die Handys:</div>
         <div class="addr">${esc(url || 'kein WLAN gefunden')}${addrs.length > 1 ? ' <button data-act="addr">Netz wechseln</button>' : ''}</div>
         <button class="danger" data-act="close-pool" title="Alle Handys werden getrennt, die Punkte gelöscht">Spielrunde schließen</button>` : ''}`;
@@ -2281,8 +2282,10 @@ else {
       mid.push(`<div class="mvlist">${rows || '<span>Keine Antworten</span>'}</div>`, playerTiles(st, q));
       tv = { cur: QZ.tvDone, opts: [['reveal', 'Lösung'], ['table', 'Tabelle'], ['board', 'Brett'], ['lobby', 'QR-Code']] };
     }
+    const namesBtn = q && q.status === 'done'
+      ? `<label class="chk" title="Namen bei der Lösung auf dem TV zeigen"><input type="checkbox" data-qopt="quizTvNames" ${settings.quizTvNames ? 'checked' : ''}> Namen</label>` : '';
     const tvRow = tv
-      ? `<span>TV:</span><div class="tvsel">${tv.opts.map(([k, l]) => `<button data-tv="${k}" class="${tv.cur === k ? 'on' : ''}">${l}</button>`).join('')}</div>`
+      ? `<span>TV:</span><div class="tvsel">${tv.opts.map(([k, l]) => `<button data-tv="${k}" class="${tv.cur === k ? 'on' : ''}">${l}</button>`).join('')}</div>${namesBtn}`
       : `<span>TV: zeigt ${q && q.paused ? 'den QR-Code (Pause)' : q && q.status === 'closed' ? '„Auswertung läuft“' : 'die Frage'}</span>`;
     pane.innerHTML = `<div class="qbar">${bar.join('')}</div><div class="qmid">${mid.join('')}</div><div class="qtv">${tvRow}</div>`;
   }
@@ -2321,7 +2324,7 @@ else {
   }
   function onQuizChange(e) {
     const k = e.target.dataset.set, o = e.target.dataset.qopt;
-    if (o) { settings[o] = e.target.checked; saveSettings(); syncTv(); return; }
+    if (o) { settings[o] = e.target.checked; saveSettings(); syncTv(); renderQuiz(); syncNamesBox(); return; }
     if (!k) return;
     settings[k] = Math.max(0, Math.round(+e.target.value || 0));
     if (settings.quizOk < settings.quizGood) settings.quizOk = settings.quizGood;
@@ -2345,6 +2348,8 @@ else {
   }
   $('#modeSel').onchange = e => setMode(e.target.value);
 
+  // Häkchen im TV-Kasten auf dem Stand halten, wenn die Einstellung im Quiz geändert wird
+  function syncNamesBox() { const c = document.querySelector('#setPanel input[data-opt="quizTvNames"]'); if (c) c.checked = !!settings.quizTvNames; }
   // kleines Engine-Fenster (Quiz-Modus): Schalter wie der große
   $('#engOn2').onchange = e => { settings.engOn = e.target.checked; $('#engOn').checked = settings.engOn; saveSettings(); render(); };
 
@@ -2666,7 +2671,7 @@ else {
   $('#notationSel').onchange = e => { settings.notation = e.target.value; saveSettings(); S.treeDirty = true; render(); };
   document.querySelectorAll('input[data-opt]').forEach(inp => {
     inp.checked = !!settings[inp.dataset.opt];
-    inp.onchange = () => { settings[inp.dataset.opt] = inp.checked; saveSettings(); render(); };
+    inp.onchange = () => { settings[inp.dataset.opt] = inp.checked; saveSettings(); render(); renderQuiz(); };
   });
 
   /* ------------------------------------------------------------------ */
