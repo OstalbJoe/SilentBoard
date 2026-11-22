@@ -44,9 +44,9 @@ selben WLAN), der Trainer fragt Stellungen ab, die Engine bewertet jeden abgegeb
 
 | Zug | Punkte |
 |---|---|
-| guter Zug (Verlust an Gewinnchance bis 3 %) | 2 |
-| kleiner bis mittlerer Verlust (bis 10 %) | 1 |
-| größerer Verlust, „Weiß nicht“ | 0 |
+| „Guter Zug“ (Verlust an Gewinnchance bis 3 %) | 2 |
+| „Etwas ungenau“ (Verlust bis 10 %) | 1 |
+| „Leider daneben“ (größerer Verlust), „Weiß nicht“ | 0 |
 
 Die Grenzen sind einstellbar. Wer den Partiezug errät, wird markiert, bekommt dafür aber keine Extrapunkte.
 Unter Windows fragt die Firewall beim ersten Öffnen eines Raums nach – „Private Netzwerke“ erlauben.

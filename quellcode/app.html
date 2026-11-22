@@ -710,7 +710,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
       <li>Zur gewünschten Stellung gehen und „Zug abfragen“ klicken. Die Spieler tippen ihren Zug und bestätigen ihn.</li>
       <li>„Pause“ hält die Uhr an und zeigt den QR-Code wieder auf dem Fernseher – z. B. wenn jemand rausgeflogen ist. „Weiter“ setzt mit der Restzeit fort.</li>
       <li>„Abbrechen (nicht werten)“ verwirft eine laufende Frage samt aller abgegebenen Züge – z. B. wenn du versehentlich dieselbe Stellung noch einmal abgefragt hast.</li>
-      <li>„Eingabe schließen“ (oder die Zeit läuft ab) – die Engine bewertet alle Züge: 2 Punkte für einen guten Zug, 1 Punkt für einen kleinen Verlust.</li>
+      <li>„Eingabe schließen“ (oder die Zeit läuft ab) – die Engine bewertet alle Züge: 2 Punkte für einen guten Zug, 1 Punkt für einen etwas ungenauen Zug.</li>
       <li>Auf dem Fernseher Auflösung oder Tabelle zeigen, dann „Fertig – nächste Frage“.</li>
       <li>Zum Schluss „Quiz beenden – Endergebnis zeigen“: Siegertreppchen auf dem Fernseher, jeder sieht seinen Platz auf dem Handy. Während des Quiz sehen die Spieler ihre Platzierung nicht.</li>
     </ol>
@@ -1994,7 +1994,7 @@ else {
     tvDone: 'reveal',             // nach der Auswertung: 'reveal' | 'table' | 'board'
     evalQid: null, evalProg: null, evalErr: null, addrIdx: 0, qrFor: '', qrSvg: '',
   };
-  const CAT_TEXT = { good: 'Guter Zug', small: 'Kleiner Verlust', big: 'Größerer Verlust', dont: 'Weiß nicht', missing: 'kein Zug', none: '–' };
+  const CAT_TEXT = { good: 'Guter Zug', small: 'Etwas ungenau', big: 'Leider daneben', dont: 'Weiß nicht', missing: 'kein Zug', none: '–' };
 
   function qsend(m) { if (QZ.ws && QZ.ws.readyState === 1) QZ.ws.send(JSON.stringify(m)); }
   function quizConnect() {

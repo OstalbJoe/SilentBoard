@@ -316,7 +316,7 @@ function showSent(a, canChange) {
 $('#sentChange').onclick = () => { editing = true; pending = null; show('vQuestion'); setupBoard(state.question, true); };
 
 const CAT = {
-  good: 'Guter Zug', small: 'Kleiner Verlust', big: 'Größerer Verlust', dont: 'Weiß nicht', missing: 'Kein Zug abgegeben', none: 'Keine Punkte',
+  good: 'Guter Zug', small: 'Etwas ungenau', big: 'Leider daneben', dont: 'Weiß nicht', missing: 'Kein Zug abgegeben', none: 'Keine Punkte',
 };
 function showResult(s) {
   show('vResult');
