@@ -41,7 +41,7 @@ Von Hand geht es auch: `SilentBoard-linux --installieren` bzw. `--entfernen`.
 
 ### Quiz
 
-Der Trainer wählt oben rechts **Modus: Quiz** und klickt „Raum öffnen“. Erst dann ist SilentBoard im WLAN erreichbar; vorher hört
+Der Trainer wählt rechts über der Zugliste **Modus: Quiz** und klickt unter den Einstellungen „Raum öffnen“. Erst dann ist SilentBoard im WLAN erreichbar; vorher hört
 das Programm nur auf den eigenen Rechner. Die Spieler scannen den QR-Code auf dem Fernseher (Laptop und Handys im
 selben WLAN), der Trainer fragt Stellungen ab, die Engine bewertet jeden abgegebenen Zug:
 
