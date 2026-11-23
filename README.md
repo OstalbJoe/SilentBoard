@@ -56,6 +56,20 @@ dafür, dass auch in klar gewonnenen oder verlorenen Stellungen ein Figureneinst
 lässt sich auch nur nach Gewinnchance oder nur nach Bauern werten; alle Grenzen sind einstellbar. Wer den Partiezug errät, wird markiert, bekommt dafür aber keine Extrapunkte.
 Unter Windows fragt die Firewall beim ersten Öffnen eines Raums nach – „Private Netzwerke“ erlauben.
 
+#### Ohne vorhandenes WLAN
+
+Laptop und Handys brauchen ein gemeinsames Netz, aber **kein Internet**. Das Quiz läuft nur im lokalen Netz.
+
+| Weg | Geräte | Hinweise |
+|---|---|---|
+| **Hotspot am Laptop** – Linux: Einstellungen → WLAN → „WLAN-Hotspot einschalten“; Windows: Einstellungen → Netzwerk → „Mobiler Hotspot“ | Windows: höchstens 8 | Der Laptop ist dann meist mit keinem anderen WLAN verbunden – Lichess-Links vorher laden. Windows lässt den Hotspot je nach Version nur einschalten, wenn der Laptop selbst eine Netzverbindung hat. |
+| **Hotspot vom Trainer-Handy** – Laptop und Spieler verbinden sich damit | meist 5–10 | Verbraucht praktisch kein Datenvolumen. |
+| **Kleiner Reise-Router** (ca. 25–40 €) | 30 und mehr | Am zuverlässigsten, unabhängig vom WLAN der Schule oder des Vereins. Manche Schul-WLANs lassen Geräte nicht miteinander sprechen. |
+
+Manche Handys schalten in einem WLAN ohne Internet auf mobile Daten um und finden den Laptop dann nicht.
+Abhilfe: die Nachfrage „Verbunden bleiben“ bestätigen oder mobile Daten kurz ausschalten. Hat der Laptop
+mehrere Netze, lässt sich die Adresse im QR-Code unter ⚙ mit „Netz wechseln“ umstellen.
+
 ## Selbst bauen
 
 Voraussetzung: [Node.js](https://nodejs.org) ab Version 18.
