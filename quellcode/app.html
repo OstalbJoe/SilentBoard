@@ -498,6 +498,7 @@ html.tv.hide-cursor body, html.tv.hide-cursor body * { cursor: none !important; 
 .tv-row { display: flex; align-items: center; gap: 3vh; }
 .tv-side { width: 34vw; max-height: 94vh; display: flex; flex-direction: column; gap: 2vh; font-size: 2.6vh; }
 .tv-side h2 { margin: 0; font-size: 3.6vh; }
+.tv-side h3.sect { margin: 0; font-size: 2.2vh; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #a9d4bc; }
 .tv-side .clock { font-size: 11vh; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
 .tv-side .clock.low { color: #f0a640; }
 .tv-side .sub { color: #a9d4bc; }
@@ -1005,8 +1006,9 @@ if (IS_TV) {
       const legend = [];
       if (q.goodSans && q.goodSans.length) legend.push(`<div><i class="lg green"></i>Gute Züge: <b>${q.goodSans.map(esc).join(', ')}</b></div>`);
       if (q.gameSan) legend.push(`<div><i class="lg blue"></i>Partiezug: <b>${esc(q.gameSan)}</b>${q.gameIsGood ? ' – auch ein guter Zug' : ''}</div>`);
-      side.innerHTML = `<h2>Eure Züge</h2>${legend.length ? `<div class="legend" style="font-size:${2.6 * (+q.legendScale || 1)}vh">${legend.join('')}</div>` : ''}
-        <div class="dist">${rows || '<span>Keine Antworten</span>'}</div>`;
+      // oben die Lösung, darunter getrennt die Züge der Spieler
+      side.innerHTML = `${legend.length ? `<h2 style="font-size:${3.6 * Math.max(1, 0.85 * (+q.legendScale || 1))}vh">Lösung</h2><div class="legend" style="font-size:${2.6 * (+q.legendScale || 1)}vh">${legend.join('')}</div>` : ''}
+        <h3 class="sect">Eure Züge</h3><div class="dist">${rows || '<span>Keine Antworten</span>'}</div>`;
     }
   }
   function lobbyHtml(q) {
