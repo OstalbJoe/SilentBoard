@@ -393,7 +393,7 @@ function showSolution(s) {
   const mineCol = pts === 1 ? 'yellow' : 'red';
   if (mine && !good.some(g => g.uci === mine) && mine !== q.gameUci) shapes.push(arrow(mine, mineCol, 10));
   for (const g of good) if (g.uci !== q.gameUci) shapes.push(arrow(g.uci, 'green', 10));
-  if (q.gameUci) shapes.push(arrow(q.gameUci, 'blue', 6));
+  if (q.gameUci) shapes.push(arrow(q.gameUci, 'blue', 10));
   if (good.length) legend.push(`<div><i class="green"></i>Gute Züge: <b>${good.map(g => esc(de(g.san))).join(', ')}</b></div>`);
   if (q.gameUci) legend.push(`<div><i class="blue"></i>Partiezug: <b>${esc(de(q.gameSan))}</b>${good.some(g => g.uci === q.gameUci) ? ' – auch ein guter Zug' : ''}</div>`);
   if (mine) legend.push(`<div><i class="${good.some(g => g.uci === mine) ? 'green' : mine === q.gameUci ? 'blue' : mineCol}"></i>Dein Zug: <b>${esc(de(s.answer.san))}</b></div>`);

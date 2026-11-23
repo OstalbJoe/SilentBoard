@@ -2183,8 +2183,8 @@ else {
       }));
       const arrow = (u, brush, w) => ({ orig: u.slice(0, 2), dest: u.slice(2, 4), brush, modifiers: { lineWidth: w } });
       const arrows = good.filter(g => g.uci !== gameUci).map(g => arrow(g.uci, 'green', 10));
-      // Partiezug schmaler und obenauf, damit ein grüner Pfeil auf derselben Linie sichtbar bleibt
-      if (gameUci) arrows.push(arrow(gameUci, 'blue', 6));
+      // Partiezug obenauf, gleiche Pfeilbreite wie die guten Züge
+      if (gameUci) arrows.push(arrow(gameUci, 'blue', 10));
       return {
         phase: 'reveal', moves, arrows,
         rest: rest.length ? { moves: rest.length, count: rest.reduce((n, m) => n + m.count, 0) } : null,
