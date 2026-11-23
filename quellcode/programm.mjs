@@ -98,7 +98,7 @@ function playerState(p) {
   const st = standings().find(s => s.id === p.id);
   const base = { t: 'state', now: Date.now(), name: p.name, total: p.total };
   if (Q.finished) return { ...base, phase: 'final', rank: st ? st.rank : null, of: Q.players.size, rounds: Q.history.length };
-  if (!q) return { ...base, phase: 'wait', cancelled: Q.cancelled };
+  if (!q) return { ...base, phase: 'wait', cancelled: Q.cancelled, rounds: Q.history.length };
   const a = q.answers.get(p.id) || null;
   if (q.status === 'open' && q.paused) return { ...base, phase: 'paused', answer: a };
   if (q.status === 'open') return { ...base, phase: 'question', question: { id: q.id, fen: q.fen, side: q.side, deadline: q.deadline }, answer: a };
