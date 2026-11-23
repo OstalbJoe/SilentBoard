@@ -103,6 +103,8 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 #loadBtn:disabled { background: transparent; color: var(--muted); }
 #loadBtn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .menu-wrap { position: relative; }
+/* Symbole in Textknöpfen etwas größer */
+.bi { font-size: 1.35em; line-height: 0; vertical-align: -.12em; margin-right: 2px; }
 .ic-btn { display: inline-flex; align-items: center; gap: 7px; }
 .ic-btn .ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .ic-btn .ic.chev { width: 14px; height: 14px; margin-left: -2px; opacity: .7; }
@@ -687,8 +689,8 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
             <div class="tv-title"><span class="dot" id="tvDot2"></span><span>Das sieht der Fernseher</span></div>
             <div class="tv-shows" id="tvShows">–</div>
             <div class="row">
-              <button id="freezeBtn" title="TV behält die aktuelle Stellung, während du hier weiterklickst (P)">❄ TV einfrieren</button>
-              <button id="setBtn" aria-expanded="false" aria-controls="setPanel" title="Was der Fernseher zeigt, Pfeile und Notation">⚙ Einstellungen</button>
+              <button id="freezeBtn" title="TV behält die aktuelle Stellung, während du hier weiterklickst (P)"><span class="bi">❄</span> TV einfrieren</button>
+              <button id="setBtn" aria-expanded="false" aria-controls="setPanel" title="Was der Fernseher zeigt, Pfeile und Notation"><span class="bi">⚙</span> Einstellungen</button>
             </div>
             <div class="opts" id="setPanel" hidden>
               <div class="set-title">Einstellungen</div>
@@ -2028,7 +2030,7 @@ else {
     $('#frozenBanner').hidden = !S.frozen;
     $('#boardHolder').classList.toggle('frozen', S.frozen);
     $('#freezeBtn').classList.toggle('on', S.frozen);
-    $('#freezeBtn').textContent = S.frozen ? '▶ TV wieder freigeben' : '❄ TV einfrieren';
+    $('#freezeBtn').innerHTML = S.frozen ? '<span class="bi">▶</span> TV wieder freigeben' : '<span class="bi">❄</span> TV einfrieren';
     updateTvStatus();
   }
   function tvConnected() { return Date.now() - tvSeen < 5000; }
@@ -2451,7 +2453,7 @@ else {
   function renderQuiz() {
     renderQuizHead();
     const pane = $('#paneQuiz');
-    const freezeBtn = `<button data-act="freeze" class="frz ${S.frozen ? 'on' : ''}" title="TV behält die aktuelle Stellung, während du hier weiterklickst (P)">${S.frozen ? '▶ Freigeben' : '❄ Einfrieren'}</button>`;
+    const freezeBtn = `<button data-act="freeze" class="frz ${S.frozen ? 'on' : ''}" title="TV behält die aktuelle Stellung, während du hier weiterklickst (P)">${S.frozen ? '<span class="bi">▶</span> Freigeben' : '<span class="bi">❄</span> Einfrieren'}</button>`;
     if (settings.mode !== 'quiz') return;
     if (!QZ.avail) { pane.innerHTML = '<div class="qmid"><p>Das Quiz braucht das SilentBoard-Programm.</p></div>'; return; }
     const st = QZ.st;
