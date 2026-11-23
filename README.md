@@ -71,7 +71,7 @@ Voraussetzung: [Node.js](https://nodejs.org) ab Version 18.
 | `quellcode/programm.mjs` | das Programm: lokaler Server, Raum für die Handys |
 | `quellcode/entry.js` | bündelt chessground, chess.js und den QR-Code-Erzeuger |
 | `quellcode/build.mjs` | baut die Seiten und die Programmdateien |
-| `logo/` | Logo (hell und dunkel) und App-Symbole (`npm run symbole`) |
+| `logo/` | Logo (hell und dunkel) und App-Symbole (`npm run symbole`) – nicht unter der GPL, siehe `logo/LIZENZ.md` |
 | `werkzeuge/` | App-Symbole erzeugen |
 
 ## Lizenz
@@ -82,6 +82,22 @@ SilentBoard ist freie Software: Du kannst es unter den Bedingungen der **GNU Gen
 Version 3** oder (nach deiner Wahl) jeder späteren Version weitergeben und/oder verändern – siehe
 [`LICENSE`](LICENSE). Wer eine veränderte Fassung weitergibt, muss sie ebenfalls unter der GPL und mit
 vollständigem Quellcode weitergeben.
+
+### Zusätzliche Bedingungen nach GPL Abschnitt 7
+
+Für den Quellcode von SilentBoard gelten zusätzlich zur GPL diese Bedingungen:
+
+1. **Name und Logo** (GPL Abschnitt 7 e): Der Name „SilentBoard“ und das SilentBoard-Logo sind nicht Teil
+   der GPL-Lizenz; alle Rechte daran liegen bei ostalbweb.de (siehe [`logo/LIZENZ.md`](logo/LIZENZ.md)).
+   Unveränderte Kopien der offiziellen Fassung dürfen mit Name und Logo weitergegeben werden. Eine
+   veränderte Fassung muss unter einem anderen Namen und mit einem anderen Logo weitergegeben werden;
+   der Hinweis, dass sie auf SilentBoard beruht, ist erlaubt.
+2. **Urheberhinweis** (GPL Abschnitt 7 b): Veränderte Fassungen müssen in ihren rechtlichen Hinweisen
+   (bei SilentBoard: Dialog „Lizenz & Info“) den Hinweis **„Ursprünglich entwickelt von ostalbweb.de
+   (SilentBoard)“** gut lesbar beibehalten.
+
+Diese Bedingungen gelten ab Version 2.0. Bereits veröffentlichte Versionen bleiben unter ihren bisherigen
+Bedingungen.
 
 Enthaltene Fremdkomponenten:
 

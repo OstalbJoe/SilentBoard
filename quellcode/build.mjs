@@ -1,5 +1,6 @@
 // SilentBoard – Copyright (C) 2026 ostalbweb.de
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Zusätzliche Bedingungen nach GPL Abschnitt 7 (Name, Logo, Urheberhinweis): siehe README.md
 // Baut das SilentBoard-Programm:
 //   ../dist/app.html        – Trainer-Ansicht (wird ins Programm eingebaut)
 //   ../dist/spieler.html    – Seite für die Handys der Spieler (wird ins Programm eingebaut)

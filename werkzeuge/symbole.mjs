@@ -1,5 +1,6 @@
 // SilentBoard – Copyright (C) 2026 ostalbweb.de
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Zusätzliche Bedingungen nach GPL Abschnitt 7 (Name, Logo, Urheberhinweis): siehe README.md
 // Erzeugt die PNG-App-Symbole aus logo/silentboard-icon.svg (nach Logo-Änderungen ausführen):
 //   npm run symbole
 import fs from 'fs';

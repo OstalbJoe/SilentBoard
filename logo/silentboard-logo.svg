@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 128">
-  <!-- SilentBoard – Copyright (C) 2026 ostalbweb.de · SPDX-License-Identifier: GPL-3.0-or-later -->
+  <!-- SilentBoard-Logo – Copyright (C) 2026 ostalbweb.de · Alle Rechte vorbehalten, nicht unter der GPL (siehe logo/LIZENZ.md) · SPDX-License-Identifier: LicenseRef-SilentBoard-Logo -->
   <svg x="0" y="0" width="128" height="128" viewBox="0 0 128 128">
   <rect x="8" y="14" width="112" height="84" rx="14" fill="#171717" stroke="#3c4640" stroke-width="2"/>
   <clipPath id="scr"><rect x="16" y="22" width="96" height="68" rx="6"/></clipPath>
