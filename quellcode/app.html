@@ -192,6 +192,7 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .engmini .em-head { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
 .engmini .em-score { font-size: 16px; font-weight: 700; color: var(--text); }
 .engmini .em-line { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.engmini .em-line b { display: inline-block; min-width: 3.2em; font-variant-numeric: tabular-nums; }
 .engmini .switch { transform: scale(.85); transform-origin: left center; }
 /* Analyse- und Quiz-Modus: jeder Modus nutzt die ganze rechte Spalte */
 .side:not(.quiz-mode) .side-grid > .quizbox, .side:not(.quiz-mode) .side-grid > .engmini { display: none; }
@@ -643,8 +644,11 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
           <div class="em-head">
             <label class="switch" title="Engine an/aus (E)"><input type="checkbox" id="engOn2"><span></span></label>
             <span class="em-score" id="emScore">–</span><span class="grow em-status" id="emStatus"></span>
+            <select class="mini" id="engLines2" title="Anzahl Varianten">
+              <option value="1">1 Linie</option><option value="2">2 Linien</option><option value="3">3 Linien</option>
+            </select>
           </div>
-          <div class="em-line" id="emLine"></div>
+          <div class="em-lines" id="emLines"></div>
         </section>
 
         <section class="card moves" id="moves"></section>
@@ -2737,8 +2741,15 @@ else {
     $('#engOn2').checked = settings.engOn;
     $('#emScore').textContent = settings.engOn ? $('#engScore').textContent : '';
     $('#emStatus').textContent = $('#engStatus').textContent;
-    const firstLine = $('#pvs .pv .ln');
-    $('#emLine').textContent = !settings.engOn ? '' : firstLine ? firstLine.textContent : ($('#pvs .hint') ? $('#pvs .hint').textContent : '');
+    const box = $('#emLines'), rows = [...$('#pvs').querySelectorAll('.pv')];
+    box.innerHTML = '';
+    if (settings.engOn) {
+      if (rows.length) for (const r of rows) {
+        const d = el('div', 'em-line');
+        d.innerHTML = `<b>${esc(r.querySelector('.sc').textContent)}</b> ${esc(r.querySelector('.ln').textContent)}`;
+        box.append(d);
+      } else if ($('#pvs .hint')) box.append(el('div', 'em-line', $('#pvs .hint').textContent));
+    }
   }
 
   /* ------------------------------------------------------------------ */
@@ -2859,7 +2870,12 @@ else {
   $('#engOn').checked = settings.engOn;
   $('#engOn').onchange = e => { settings.engOn = e.target.checked; saveSettings(); render(); };
   $('#engLines').value = String(settings.engLines);
-  $('#engLines').onchange = e => { settings.engLines = +e.target.value; saveSettings(); Engine.restart(); render(); };
+  $('#engLines2').value = String(settings.engLines);
+  // Analyse und Quiz teilen sich die Einstellung „Linien“
+  for (const id of ['#engLines', '#engLines2']) $(id).onchange = e => {
+    settings.engLines = +e.target.value; $('#engLines').value = $('#engLines2').value = String(settings.engLines);
+    saveSettings(); Engine.restart(); render();
+  };
   $('#notationSel').value = settings.notation;
   $('#notationSel').onchange = e => { settings.notation = e.target.value; saveSettings(); S.treeDirty = true; render(); };
   document.querySelectorAll('input[data-opt]').forEach(inp => {
