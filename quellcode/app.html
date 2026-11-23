@@ -180,12 +180,23 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .gh-quiz .cnt { color: var(--muted); font-size: 13px; white-space: nowrap; }
 .gh-quiz .badge { background: var(--qdark); color: var(--qlight); border: 0; border-radius: 12px; padding: 3px 10px; font-size: 12px; font-weight: 700; }
 .qzset {
-  position: absolute; right: 10px; top: calc(100% + 6px); z-index: 40; width: 320px;
+  position: absolute; right: 10px; top: calc(100% + 6px); z-index: 40; width: 380px;
   background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
   box-shadow: 0 10px 30px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 8px; font-size: 13px;
 }
 .qzset[hidden] { display: none; }
 .qzset .t { font-weight: 700; }
+/* Quiz-Einstellungen: Gruppen Frage / Wertung / Fernseher / Raum */
+.sgrp { display: flex; flex-direction: column; gap: 7px; }
+.sgrp + .sgrp { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 2px; }
+.sgrp h4 { margin: 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.srow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sgrp .u { white-space: nowrap; color: var(--muted); }
+.sgrp input[type=number] { width: 64px; padding: 2px 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; color: var(--text); }
+.sgrp select { padding: 2px 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; color: var(--text); }
+.thr { display: grid; gap: 5px 14px; align-items: center; }
+.thr .th { font-size: 11px; color: var(--muted); }
+.thr .u, .thr .th { justify-self: end; }
 .set { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
 .set input[type=number] { width: 64px; padding: 2px 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; color: var(--text); }
 .qzset .addr { font-family: ui-monospace, monospace; font-size: 12px; color: var(--muted); word-break: break-all; }
@@ -315,7 +326,7 @@ select.mini { padding: 1px 4px; border-radius: 4px; border: 1px solid var(--line
 .quiz p { margin: 0; color: var(--muted); }
 .quiz .qbtn { width: 100%; padding: 9px; font-weight: 700; font-size: 14px; }
 .quiz .qbtn.go { background: var(--qgreen); border-color: var(--qgreen); color: #fff; }
-.quiz .open-room { margin-top: 14px; padding: 12px; font-size: 16px; }
+.quiz .open-room { margin-top: 14px; padding: 12px; font-size: 16px; position: sticky; bottom: 0; box-shadow: 0 -6px 12px var(--panel); }
 .quiz .qrow { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .quiz .qrow > .grow { flex: 1; }
 .quiz .qhead { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
@@ -2350,20 +2361,32 @@ else {
   /* ---- Kopfbereich rechts: Modus-Auswahl, „Raum öffnen“, Raum-Code, ⚙ ---- */
   function settingsHtml(open) {
     const st = QZ.st, url = quizUrl(), addrs = (st && st.pool.addresses) || [];
-    return `${open ? '<div class="t">Raum</div>' : ''}
-      <div class="set">
-        <span>Zeit pro Frage (Sekunden, 0 = ohne)</span><input type="number" min="0" max="600" step="10" data-set="quizSecs" value="${settings.quizSecs}">
-        <span>Bewertung nach</span><select data-qsel="quizMetric">${[['both', 'Gewinnchance und Bauern'], ['wc', 'nur Gewinnchance'], ['cp', 'nur Bauern']]
-          .map(([v, t]) => `<option value="${v}"${settings.quizMetric === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
-        ${settings.quizMetric !== 'cp' ? `<span>2 Punkte bis Verlust (%)</span><input type="number" min="0" max="50" step="1" data-set="quizGood" value="${settings.quizGood}">
-        <span>1 Punkt bis Verlust (%)</span><input type="number" min="0" max="80" step="1" data-set="quizOk" value="${settings.quizOk}">` : ''}
-        ${settings.quizMetric !== 'wc' ? `<span>2 Punkte bis Verlust (Bauern)</span><input type="number" min="0" max="10" step="0.1" data-set="quizGoodCp" value="${settings.quizGoodCp}">
-        <span>1 Punkt bis Verlust (Bauern)</span><input type="number" min="0" max="10" step="0.1" data-set="quizOkCp" value="${settings.quizOkCp}">` : ''}
+    const wc = settings.quizMetric !== 'cp', cp = settings.quizMetric !== 'wc';
+    const num = (k, max, step) => `<input type="number" min="0" max="${max}" step="${step}" data-set="${k}" value="${settings[k]}">`;
+    const thr = (label, kWc, kCp) => `<span>${label}</span>${wc ? `<span class="u">${num(kWc, kWc === 'quizGood' ? 50 : 80, 1)} %</span>` : ''}${cp ? `<span class="u">${num(kCp, 10, 0.1)}</span>` : ''}`;
+    return `${open ? '<div class="t">Einstellungen</div>' : ''}<div class="sgrp">
+        <h4>Frage</h4>
+        <div class="srow"><span>Zeit pro Frage</span><span class="u" title="0 = ohne Zeitlimit">${num('quizSecs', 600, 10)} s</span></div>
       </div>
-      <label class="chk"><input type="checkbox" data-qopt="quizTvNames" ${settings.quizTvNames ? 'checked' : ''}> Namen bei der Lösung auf dem TV zeigen</label>
-      ${open ? `<div>Adresse für die Handys:</div>
-        <div class="addr">${esc(url || 'kein WLAN gefunden')}${addrs.length > 1 ? ' <button data-act="addr">Netz wechseln</button>' : ''}</div>
-        <button class="danger" data-act="close-pool" title="Alle Handys werden getrennt, die Punkte gelöscht">Raum schließen</button>` : ''}`;
+      <div class="sgrp">
+        <h4>Wertung</h4>
+        <div class="srow"><span>Bewertung nach</span><select data-qsel="quizMetric">${[['both', 'Gewinnchance und Bauern'], ['wc', 'nur Gewinnchance'], ['cp', 'nur Bauern']]
+          .map(([v, t]) => `<option value="${v}"${settings.quizMetric === v ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
+        <div class="thr" style="grid-template-columns: 1fr${wc ? ' auto' : ''}${cp ? ' auto' : ''}">
+          <span></span>${wc ? '<span class="th">Gewinnchance</span>' : ''}${cp ? '<span class="th">Bauern</span>' : ''}
+          ${thr('2 Punkte bis Verlust', 'quizGood', 'quizGoodCp')}
+          ${thr('1 Punkt bis Verlust', 'quizOk', 'quizOkCp')}
+        </div>
+      </div>
+      <div class="sgrp">
+        <h4>Fernseher</h4>
+        <label class="chk"><input type="checkbox" data-qopt="quizTvNames" ${settings.quizTvNames ? 'checked' : ''}> Namen bei der Lösung zeigen</label>
+      </div>
+      ${open ? `<div class="sgrp">
+        <h4>Raum</h4>
+        <div class="addr" title="Adresse für die Handys">${esc(url || 'kein WLAN gefunden')}${addrs.length > 1 ? ' <button data-act="addr">Netz wechseln</button>' : ''}</div>
+        <button class="danger" data-act="close-pool" title="Alle Handys werden getrennt, die Punkte gelöscht">Raum schließen</button>
+      </div>` : ''}`;
   }
   function lossTitle(m) {
     if (m.loss == null) return '';
