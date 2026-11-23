@@ -778,7 +778,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
       <li>„Pause“ hält die Uhr an und zeigt den QR-Code wieder auf dem Fernseher – z. B. wenn jemand rausgeflogen ist. „Weiter“ setzt mit der Restzeit fort.</li>
       <li>„Abbrechen (nicht werten)“ verwirft eine laufende Frage samt aller abgegebenen Züge – z. B. wenn du versehentlich dieselbe Stellung noch einmal abgefragt hast.</li>
       <li>„Eingabe schließen“ (oder die Zeit läuft ab) – die Engine bewertet alle Züge: 2 Punkte für einen guten Zug, 1 Punkt für einen etwas ungenauen Zug. Unter ⚙ lässt sich einstellen, ob nach Gewinnchance, nach Bauern oder nach beidem gewertet wird – bei „beidem“ muss ein Zug beide Grenzen einhalten.</li>
-      <li>Auf dem Fernseher Auflösung oder Tabelle zeigen, dann „Fertig – nächste Frage“.</li>
+      <li>Auf dem Fernseher Auflösung oder Tabelle zeigen, dann „Nächste Frage“.</li>
       <li>Zum Schluss „Quiz beenden – Endergebnis zeigen“: Siegertreppchen auf dem Fernseher, jeder sieht seinen Platz auf dem Handy. Während des Quiz sehen die Spieler ihre Platzierung nicht.</li>
     </ol>
     <h3 style="margin-top:14px">Beenden</h3>
@@ -2459,7 +2459,7 @@ else {
       const r = q.results || { moves: [] };
       const top = (r.top || []).map(t => `<span class="eng p${t.points}"><b>${esc(fmtSan(t.san, settings.notation))}</b> ${fmtScore(t)}</span>`).join('');
       bar.push(`<div class="qhead">Ergebnis</div>${top ? `<div class="engtop">Engine: ${top}</div>` : ''}
-        <div class="qrow"><button class="qbtn go grow" data-act="next">Fertig – nächste Frage</button><button data-act="finish">Quiz beenden</button></div>`);
+        <div class="qrow"><button class="qbtn go grow" data-act="next">Nächste Frage</button><button data-act="finish">Quiz beenden</button></div>`);
       const rows = r.moves.map(m => `<span class="pts p${m.points == null ? 0 : m.points}">${m.points == null ? '–' : m.points}</span>
         <span><b>${esc(fmtSan(m.san, settings.notation))}</b>${m.isGame ? '<span class="gm">Partiezug</span>' : ''}</span>
         <span>${lossText(m)}</span><span>${m.count}×</span>
