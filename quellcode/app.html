@@ -2140,6 +2140,7 @@ else {
   function quizTvState() {
     const st = QZ.st;
     if (!QZ.avail || !st || !st.pool.open) return null;
+    if (settings.mode !== 'quiz') return null;   // Analyse-Modus: Fernseher zeigt das Brett, auch bei offenem Raum
     const q = st.question;
     const total = st.players.length;
     const answered = q ? Object.keys(q.answers).length : 0;
@@ -2542,6 +2543,7 @@ else {
     $('.side').classList.toggle('quiz-mode', settings.mode === 'quiz');
     $('#modeSel').value = settings.mode;
     renderQuiz();
+    if (S.cur) syncTv();   // beim Start ist noch keine Partie geladen
   }
   $('#modeSel').onchange = e => {
     const st = QZ.st;
