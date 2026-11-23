@@ -103,6 +103,10 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 #loadBtn:disabled { background: transparent; color: var(--muted); }
 #loadBtn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .menu-wrap { position: relative; }
+.ic-btn { display: inline-flex; align-items: center; gap: 7px; }
+.ic-btn .ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.ic-btn .ic.chev { width: 14px; height: 14px; margin-left: -2px; opacity: .7; }
+#pgnBtn .ic:first-child { color: #d9a441; }
 .menu { position: absolute; top: calc(100% + 4px); left: 0; z-index: 60; min-width: 150px; display: flex; flex-direction: column; padding: 4px;
   background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 6px 20px rgba(0,0,0,.4); }
 .menu[hidden] { display: none; }
@@ -550,7 +554,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
         <button id="loadBtn" title="Laden (Enter)" aria-label="Laden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg></button>
       </div>
       <div class="menu-wrap">
-        <button id="pgnBtn" aria-haspopup="menu" title="PGN-Datei öffnen oder speichern (Datei auch einfach ins Fenster ziehen)">📂 PGN ▾</button>
+        <button id="pgnBtn" aria-haspopup="menu" title="PGN-Datei öffnen oder speichern (Datei auch einfach ins Fenster ziehen)" class="ic-btn"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9.5a2 2 0 0 0-2-2h-7l-2-2.5H5a2 2 0 0 0-2 2z"/><path d="M3 11h18"/></svg><span>PGN</span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>
         <div class="menu" id="pgnMenu" hidden role="menu">
           <button id="pgnOpenItem" role="menuitem">Laden …</button>
           <button id="pgnSaveTop" role="menuitem">Speichern …</button>
@@ -703,7 +707,7 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
       <b>Text:</b> unten einfügen, z. B. aus Lichess („Teilen &amp; exportieren“ → PGN kopieren). Beides geht auch ohne Internet.</p>
     <textarea id="pgnText" spellcheck="false" placeholder='[Event "..."]&#10;1. e4 e5 2. Nf3 ...'></textarea>
     <div class="row">
-      <button id="pgnFileBtn" title="PGN-Datei vom Computer öffnen">📂 Datei öffnen …</button>
+      <button id="pgnFileBtn" title="PGN-Datei vom Computer öffnen" class="ic-btn"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9.5a2 2 0 0 0-2-2h-7l-2-2.5H5a2 2 0 0 0-2 2z"/><path d="M3 11h18"/></svg><span>Datei öffnen …</span></button>
       <input type="file" id="pgnFile" accept=".pgn,.txt,application/x-chess-pgn,text/plain" hidden>
       <span style="flex:1"></span>
       <button id="pgnCancel">Abbrechen</button>
