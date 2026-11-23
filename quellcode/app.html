@@ -93,9 +93,29 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .brand { display: flex; align-items: center; gap: 10px; font-size: 18px; }
 .brand-icon { width: 44px; height: 44px; }
 .brand small { font-weight: 400; color: var(--muted); }
-#src { flex: 1 1 200px; min-width: 150px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); }
-#gameSel { max-width: 220px; padding: 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); }
-.tv-btn { display: inline-flex; align-items: center; gap: 8px; }
+/* Gruppen: Partie laden | Vorführen | Programm */
+.tb-group { display: flex; align-items: center; gap: 8px; padding-left: 14px; border-left: 1px solid var(--line); }
+.tb-grow { flex: 1; }
+.src-wrap { position: relative; display: flex; width: clamp(200px, 26vw, 380px); }
+#src { flex: 1; min-width: 0; padding: 6px 38px 6px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); }
+#loadBtn { position: absolute; right: 3px; top: 3px; bottom: 3px; width: 32px; padding: 0; display: grid; place-items: center;
+  border: 0; border-radius: 4px; background: var(--accent); color: var(--accent-text); }
+#loadBtn:disabled { background: transparent; color: var(--muted); }
+#loadBtn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.menu-wrap { position: relative; }
+.menu { position: absolute; top: calc(100% + 4px); left: 0; z-index: 60; min-width: 150px; display: flex; flex-direction: column; padding: 4px;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 6px 20px rgba(0,0,0,.4); }
+.menu[hidden] { display: none; }
+.menu button { text-align: left; border: 0; background: transparent; }
+.menu button:hover { background: var(--panel); }
+.tv-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+.tv-btn .dot { background: rgba(255,255,255,.55); }
+.tb-icons button { width: 36px; padding-left: 0; padding-right: 0; font-weight: 700; }
+/* Partie-/Kapitelauswahl im Partiekopf */
+.gh-games { display: flex; align-items: center; gap: 4px; margin-top: 6px; }
+.gh-games[hidden] { display: none; }
+.gh-games button { padding: 3px 8px; }
+#gameSel { min-width: 0; max-width: 100%; flex: 0 1 auto; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); display: inline-block; flex: none; }
 .dot.on { background: var(--good); box-shadow: 0 0 6px var(--good); }
 .dot.frozen { background: var(--warn); box-shadow: 0 0 6px var(--warn); }
@@ -509,16 +529,26 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
 <!-- ==================== Trainer-Ansicht ==================== -->
 <div id="presenter" hidden>
   <header class="topbar">
-    <div class="brand"><img src="@@ICON@@" alt="" class="brand-icon"> SilentBoard <small>Trainer-Ansicht</small></div>
-    <input id="src" type="text" placeholder="Lichess-Link (Partie oder Studie) oder Partie-ID einfügen …" autocomplete="off" spellcheck="false">
-    <button id="loadBtn" class="primary">Laden</button>
-    <button id="pgnBtn" title="PGN-Datei öffnen oder PGN-Text einfügen (Datei auch einfach ins Fenster ziehen)">PGN laden</button>
-    <button id="pgnSaveTop" title="Partie mit Kommentaren als PGN-Datei speichern">PGN speichern</button>
-    <select id="gameSel" hidden title="Partie / Kapitel wählen"></select>
+    <div class="brand"><img src="@@ICON@@" alt="" class="brand-icon"> SilentBoard</div>
+    <div class="tb-group">
+      <div class="src-wrap">
+        <input id="src" type="text" placeholder="Lichess-Link oder Partie-ID …" title="Lichess-Partie oder -Studie: Link oder ID einfügen, Enter lädt" autocomplete="off" spellcheck="false">
+        <button id="loadBtn" title="Laden (Enter)" aria-label="Laden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg></button>
+      </div>
+      <div class="menu-wrap">
+        <button id="pgnBtn" aria-haspopup="menu" title="PGN-Datei öffnen oder speichern (Datei auch einfach ins Fenster ziehen)">📂 PGN ▾</button>
+        <div class="menu" id="pgnMenu" hidden role="menu">
+          <button id="pgnOpenItem" role="menuitem">Laden …</button>
+          <button id="pgnSaveTop" role="menuitem">Speichern …</button>
+        </div>
+      </div>
+    </div>
+    <span class="tb-grow"></span>
     <button id="tvBtn" class="tv-btn" title="Öffnet ein zweites Fenster nur mit dem Brett – auf den Fernseher ziehen"><span class="dot" id="tvDot"></span><span id="tvBtnText">TV-Fenster öffnen</span></button>
-    <button id="helpBtn" title="Tastenkürzel">?</button>
-    <button id="licBtn" title="Lizenz, Haftung, Datenschutz und Quellcode">Lizenz &amp; Info</button>
-    <button id="quitBtn" hidden title="SilentBoard beenden – auch ein offener Raum wird geschlossen">⏻ Beenden</button>
+    <div class="tb-group tb-icons">
+      <button id="helpBtn" title="Hilfe, Lizenz und Info" aria-label="Hilfe">?</button>
+      <button id="quitBtn" hidden title="SilentBoard beenden – auch ein offener Raum wird geschlossen" aria-label="SilentBoard beenden">⏻</button>
+    </div>
     <div id="msg" class="msg" hidden></div>
   </header>
 
@@ -553,7 +583,12 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
       <section class="card game-head" id="gameHead">
         <div class="gh-info">
           <div class="players" id="players">Keine Partie geladen</div>
-          <div class="game-meta" id="gameMeta">Lichess-Link oben einfügen und „Laden“ klicken.</div>
+          <div class="game-meta" id="gameMeta">Lichess-Link oben einfügen oder PGN laden.</div>
+          <div class="gh-games" id="ghGames" hidden>
+            <button id="gamePrev" title="Vorige Partie / voriges Kapitel" aria-label="Vorige Partie">◀</button>
+            <select id="gameSel" title="Partie / Kapitel wählen"></select>
+            <button id="gameNext" title="Nächste Partie / nächstes Kapitel" aria-label="Nächste Partie">▶</button>
+          </div>
         </div>
         <div class="gh-mode" id="ghMode" hidden>
           <select id="modeSel" title="Modus wählen">
@@ -728,9 +763,9 @@ html.tv.fullscreen .tv-hint { opacity: 0; }
     <h3 style="margin-top:14px">Beenden</h3>
     <p>Schließt du den Browser (Trainer-Ansicht und TV-Fenster), beendet sich SilentBoard nach 10 Sekunden von selbst.
       Ist im Quiz ein Raum offen, fragt der Browser vorher nach, und SilentBoard läuft weiter, damit Spieler und Punkte
-      erhalten bleiben – erneut starten holt alles zurück. „⏻ Beenden“ oben rechts beendet SilentBoard sofort.</p>
+      erhalten bleiben – erneut starten holt alles zurück. „⏻“ oben rechts beendet SilentBoard sofort.</p>
     <p style="margin-top:12px">Das TV-Fenster zeigt nur das Brett. Fenster auf den Fernseher ziehen und dort doppelklicken (oder F11) für Vollbild. Tasten im TV-Fenster werden an dieses Fenster weitergeleitet.</p>
-    <div class="row"><button id="helpClose" class="primary">OK</button></div>
+    <div class="row"><button id="licBtn" title="Lizenz, Haftung, Datenschutz und Quellcode">Lizenz &amp; Info</button><span style="flex:1"></span><button id="helpClose" class="primary">OK</button></div>
   </dialog>
 </div>
 
@@ -1350,7 +1385,7 @@ else {
     if (!s) { showMsg('Bitte einen Lichess-Link oder eine Partie-ID einfügen.', 'err'); return; }
     if (looksLikePgn(s)) { loadPgn(s); return; }
     const ref = parseLichessRef(s);
-    if (!ref) { showMsg('Das sieht nicht nach einem Lichess-Link aus. Tipp: „PGN laden“ geht immer.', 'err'); return; }
+    if (!ref) { showMsg('Das sieht nicht nach einem Lichess-Link aus. Tipp: „PGN → Laden …“ geht immer.', 'err'); return; }
     let url;
     if (ref.kind === 'study') {
       url = `https://lichess.org/api/study/${ref.study}${ref.chapter ? '/' + ref.chapter : ''}.pgn?comments=true&variations=true&clocks=false&orientation=true`;
@@ -1363,7 +1398,7 @@ else {
       const r = await fetch(url, { headers: { Accept: 'application/x-chess-pgn' } });
       if (r.status === 404 || r.status === 403 || r.status === 401) {
         throw new Error(ref.kind === 'study'
-          ? 'Studie nicht gefunden oder privat. Bei privaten Studien: in Lichess „Teilen & exportieren“ → PGN kopieren → hier „PGN laden“.'
+          ? 'Studie nicht gefunden oder privat. Bei privaten Studien: in Lichess „Teilen & exportieren“ → PGN kopieren → hier „PGN → Laden …“.'
           : 'Partie nicht gefunden. Stimmt der Link?');
       }
       if (r.status === 429) throw new Error('Lichess meldet zu viele Anfragen – bitte eine Minute warten.');
@@ -1373,7 +1408,7 @@ else {
       if (loadPgn(text, { orientation: ref.color, startPly })) { showMsg('Geladen.', 'ok'); $('#src').blur(); }
     } catch (e) {
       showMsg(e instanceof TypeError
-        ? 'Keine Verbindung zu Lichess. Ohne Internet: in Lichess PGN kopieren und über „PGN laden“ einfügen.'
+        ? 'Keine Verbindung zu Lichess. Ohne Internet: in Lichess PGN kopieren und über „PGN → Laden …“ einfügen.'
         : e.message, 'err');
     } finally {
       updateLoadBtn();
@@ -1401,12 +1436,17 @@ else {
     const sel = $('#gameSel');
     sel.innerHTML = '';
     S.games.forEach((g, i) => { const o = el('option', null, `${i + 1}. ${gameLabel(g, i)}`); o.value = i; sel.append(o); });
-    sel.hidden = S.games.length < 2;
+    $('#ghGames').hidden = S.games.length < 2;
+  }
+  function updateGameNav() {
+    $('#gamePrev').disabled = !(S.gameIdx > 0);
+    $('#gameNext').disabled = !(S.gameIdx < S.games.length - 1);
   }
 
   function selectGame(idx, opts = {}) {
     S.gameIdx = idx;
     $('#gameSel').value = idx;
+    updateGameNav();
     const g = S.games[idx];
     S.headers = g.headers;
     S.result = g.result || g.headers.Result || '*';
@@ -1680,7 +1720,7 @@ else {
     if (!S.root || (!S.root.children.length && !S.root.comments.length && !S.pgnText)) {
       box.innerHTML = `<div class="empty-state">
         <p><b>So geht's:</b></p>
-        <p>1. Oben einen Lichess-Link einfügen – eine Partie (<i>lichess.org/abcd1234</i>) oder ein Studienkapitel – und „Laden“ klicken. Alternativ „PGN laden“ (Datei oder Text).</p>
+        <p>1. Oben einen Lichess-Link einfügen – eine Partie (<i>lichess.org/abcd1234</i>) oder ein Studienkapitel – und Enter drücken. Alternativ „PGN → Laden …“ (Datei oder Text).</p>
         <p>2. „TV-Fenster öffnen“ klicken, das neue Fenster auf den Fernseher ziehen und dort doppelklicken (Vollbild).</p>
         <p>3. Hier mit ← → durch die Partie gehen. Der Fernseher zeigt nur das Brett – Züge, Kommentare und Engine bleiben hier.</p>
       </div>`;
@@ -2748,7 +2788,13 @@ else {
   $('#src').addEventListener('input', updateLoadBtn);
   $('#src').addEventListener('keydown', e => { if (e.key === 'Enter' && $('#src').value.trim()) loadFromInput(); });
   $('#gameSel').onchange = e => selectGame(+e.target.value, { keepOrientation: true });
-  $('#pgnBtn').onclick = () => { $('#pgnText').value = ''; $('#pgnDialog').showModal(); $('#pgnText').focus(); };
+  $('#gamePrev').onclick = () => { if (S.gameIdx > 0) selectGame(S.gameIdx - 1, { keepOrientation: true }); };
+  $('#gameNext').onclick = () => { if (S.gameIdx < S.games.length - 1) selectGame(S.gameIdx + 1, { keepOrientation: true }); };
+  // PGN-Menü: Laden / Speichern
+  $('#pgnBtn').onclick = e => { e.stopPropagation(); $('#pgnMenu').hidden = !$('#pgnMenu').hidden; };
+  document.addEventListener('click', () => { $('#pgnMenu').hidden = true; });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#pgnMenu').hidden = true; });
+  $('#pgnOpenItem').onclick = () => { $('#pgnText').value = ''; $('#pgnDialog').showModal(); $('#pgnText').focus(); };
   $('#pgnCancel').onclick = () => $('#pgnDialog').close();
   function afterPgnLoad(what) {
     if ($('#pgnDialog').open) $('#pgnDialog').close();
@@ -2756,7 +2802,7 @@ else {
     updateLoadBtn();
     saveSession();
     const n = S.games.length;
-    showMsg(`${what} geladen${n > 1 ? ` – ${n} Partien, Auswahl oben in der Liste` : ''}.`, 'ok');
+    showMsg(`${what} geladen${n > 1 ? ` – ${n} Partien, Auswahl über der Zugliste` : ''}.`, 'ok');
   }
   $('#pgnOk').onclick = () => { if (loadPgn($('#pgnText').value)) afterPgnLoad('PGN'); };
 
@@ -2805,7 +2851,7 @@ else {
   $('#pgnSaveTop').onclick = savePgn;
   $('#helpBtn').onclick = () => $('#helpDialog').showModal();
   $('#helpClose').onclick = () => $('#helpDialog').close();
-  $('#licBtn').onclick = () => $('#licDialog').showModal();
+  $('#licBtn').onclick = () => { $('#helpDialog').close(); $('#licDialog').showModal(); };
   $('#licClose').onclick = () => $('#licDialog').close();
 
   $('#engOn').checked = settings.engOn;
