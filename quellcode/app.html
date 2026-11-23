@@ -504,13 +504,13 @@ html.tv.hide-cursor body, html.tv.hide-cursor body * { cursor: none !important; 
 .tv-side .sub { color: #a9d4bc; }
 .tv-side .prog { height: 1.4vh; background: #2c5a45; border-radius: 1vh; overflow: hidden; }
 .tv-side .prog > div { height: 100%; background: #5a9a7a; transition: width .4s; }
-.tv-side .dist { display: grid; grid-template-columns: auto 1fr auto; gap: 1.2vh 1.5vh; align-items: center; }
+.tv-side .dist { display: grid; grid-template-columns: auto 1fr auto; gap: .46em .58em; align-items: center; }
 .tv-side .dist .mv { font-weight: 800; white-space: nowrap; }
-.tv-side .dist .b { height: 3.2vh; border-radius: .6vh; }
+.tv-side .dist .b { height: 1.23em; border-radius: .23em; }
 .tv-side .dist .b.p2 { background: #5a9a7a; } .tv-side .dist .b.p1 { background: #d6a33a; } .tv-side .dist .b.p0 { background: #b8574f; } .tv-side .dist .b.pn { background: #555; }
 .tv-side .dist .n { font-weight: 800; min-width: 3ch; text-align: right; }
-.tv-side .dist .who { grid-column: 2 / span 2; font-size: 2vh; color: #b9c4bd; margin-top: -.8vh; }
-.tv-side .tag { display: inline-block; font-size: 1.8vh; background: #2c5a45; color: #a9d4bc; border-radius: 2vh; padding: .2vh 1vh; margin-left: 1vh; vertical-align: middle; }
+.tv-side .dist .who { grid-column: 2 / span 2; font-size: .77em; color: #b9c4bd; margin-top: -.4em; }
+.tv-side .tag { display: inline-block; font-size: .7em; background: #2c5a45; color: #a9d4bc; border-radius: 1em; padding: .1em .55em; margin-left: .55em; vertical-align: middle; }
 .tv-side .facts { border-top: .2vh solid #3c4640; padding-top: 1.5vh; color: #d6dcd8; }
 .tv-side .legend { display: flex; flex-direction: column; gap: 1vh; padding-bottom: 1.8vh; border-bottom: .2vh solid #3c4640; color: #d6dcd8; }
 .tv-side .dist .mv.rest { font-weight: 600; color: #b9c4bd; }
@@ -1008,7 +1008,7 @@ if (IS_TV) {
       if (q.gameSan) legend.push(`<div><i class="lg blue"></i>Partiezug: <b>${esc(q.gameSan)}</b>${q.gameIsGood ? ' – auch ein guter Zug' : ''}</div>`);
       // oben die Lösung, darunter getrennt die Züge der Spieler
       side.innerHTML = `${legend.length ? `<h2 style="font-size:${3.6 * Math.max(1, 0.85 * (+q.legendScale || 1))}vh">Lösung</h2><div class="legend" style="font-size:${2.6 * (+q.legendScale || 1)}vh">${legend.join('')}</div>` : ''}
-        <h3 class="sect">Eure Züge</h3><div class="dist">${rows || '<span>Keine Antworten</span>'}</div>`;
+        <h3 class="sect">Eure Züge</h3><div class="dist" style="font-size:${2.6 * (+q.legendScale || 1)}vh">${rows || '<span>Keine Antworten</span>'}</div>`;
     }
   }
   function lobbyHtml(q) {
@@ -2150,7 +2150,9 @@ else {
     return QZ.qrSvg;
   }
 
-  const TV_ROWS = 6;
+  // bei großer Schrift weniger Zeilen, damit alles auf den Bildschirm passt (gemessen bei 1920×1080;
+  // Namen unter den Zügen brauchen je eine zusätzliche Zeile)
+  const tvRows = () => (settings.quizTvNames ? { 1: 6, 1.4: 4, 1.8: 2 } : { 1: 6, 1.4: 5, 1.8: 4 })[+settings.quizTvFont] || 6;
   function quizTvState() {
     const st = QZ.st;
     if (!QZ.avail || !st || !st.pool.open) return null;
@@ -2172,7 +2174,8 @@ else {
       const r = q.results || {};
       const good = r.good || [];
       const gameUci = r.gameUci || q.gameUci || '';
-      // auf dem TV höchstens TV_ROWS Zeilen: gute Züge und Partiezug zuerst, dann die häufigsten
+      // auf dem TV nur wenige Zeilen: gute Züge und Partiezug zuerst, dann die häufigsten
+      const TV_ROWS = tvRows();
       const all = r.moves || [];
       const keep = new Set(all.filter(m => m.uci && (m.isGame || good.some(g => g.uci === m.uci))).slice(0, TV_ROWS));
       for (const m of all) if (keep.size < TV_ROWS) keep.add(m);
@@ -2383,7 +2386,7 @@ else {
       </div>
       <div class="sgrp">
         <h4>Fernseher</h4>
-        <div class="srow"><span>Schrift gute Züge / Partiezug</span><select data-qsel="quizTvFont">${[[1, 'normal'], [1.4, 'groß'], [1.8, 'sehr groß']]
+        <div class="srow"><span>Schriftgröße bei der Lösung</span><select data-qsel="quizTvFont">${[[1, 'normal'], [1.4, 'groß'], [1.8, 'sehr groß']]
           .map(([v, t]) => `<option value="${v}"${+settings.quizTvFont === v ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
         <label class="chk"><input type="checkbox" data-qopt="quizTvNames" ${settings.quizTvNames ? 'checked' : ''}> Namen bei der Lösung zeigen</label>
       </div>
