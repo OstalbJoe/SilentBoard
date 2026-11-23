@@ -104,7 +104,12 @@ function playerState(p) {
   if (q.status === 'open') return { ...base, phase: 'question', question: { id: q.id, fen: q.fen, side: q.side, deadline: q.deadline }, answer: a };
   if (q.status === 'closed') return { ...base, phase: 'closed', answer: a };
   const r = q.results && q.results.players[p.id];
-  return { ...base, phase: 'result', answer: a, result: r || { points: 0, cat: a ? 'none' : 'missing' }, best: q.results && q.results.bestSan, game: q.results && q.results.gameSan };
+  const res = q.results || {};
+  return {
+    ...base, phase: 'result', answer: a, result: r || { points: 0, cat: a ? 'none' : 'missing' }, best: res.bestSan, game: res.gameSan,
+    // für „Beste Züge ansehen“ auf dem Handy
+    solution: { id: q.id, fen: q.fen, side: q.side, good: res.good || [], gameUci: res.gameUci || '', gameSan: res.gameSan || '' },
+  };
 }
 function toPlayer(p) { if (p.ws) p.ws.send(JSON.stringify(playerState(p))); }
 function toAllPlayers() { for (const p of Q.players.values()) toPlayer(p); }
