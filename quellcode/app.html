@@ -513,7 +513,7 @@ html.tv.hide-cursor body, html.tv.hide-cursor body * { cursor: none !important; 
 .tv-side .facts { border-top: .2vh solid #3c4640; padding-top: 1.5vh; color: #d6dcd8; }
 .tv-side .legend { display: flex; flex-direction: column; gap: 1vh; padding-bottom: 1.8vh; border-bottom: .2vh solid #3c4640; color: #d6dcd8; }
 .tv-side .dist .mv.rest { font-weight: 600; color: #b9c4bd; }
-.tv-side .legend .lg { display: inline-block; width: 4.5vh; height: 1vh; border-radius: .5vh; margin-right: 1.2vh; vertical-align: middle; }
+.tv-side .legend .lg { display: inline-block; width: 1.7em; height: .4em; border-radius: .2em; margin-right: .45em; vertical-align: middle; }
 .tv-side .legend .lg.green { background: #15781b; } .tv-side .legend .lg.blue { background: #003088; box-shadow: 0 0 0 .15vh #6f8fd6; }
 .tv-full { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3vh; background: var(--tvbg); padding: 4vh 6vw; }
 .tv-full .logo { height: 12vh; }
@@ -1005,7 +1005,7 @@ if (IS_TV) {
       const legend = [];
       if (q.goodSans && q.goodSans.length) legend.push(`<div><i class="lg green"></i>Gute Züge: <b>${q.goodSans.map(esc).join(', ')}</b></div>`);
       if (q.gameSan) legend.push(`<div><i class="lg blue"></i>Partiezug: <b>${esc(q.gameSan)}</b>${q.gameIsGood ? ' – auch ein guter Zug' : ''}</div>`);
-      side.innerHTML = `<h2>Eure Züge</h2>${legend.length ? `<div class="legend">${legend.join('')}</div>` : ''}
+      side.innerHTML = `<h2>Eure Züge</h2>${legend.length ? `<div class="legend" style="font-size:${2.6 * (+q.legendScale || 1)}vh">${legend.join('')}</div>` : ''}
         <div class="dist">${rows || '<span>Keine Antworten</span>'}</div>`;
     }
   }
@@ -1147,7 +1147,7 @@ else {
     notation: 'de', engOn: true, engLines: 3,
     tvNames: true, tvTurn: true, tvLast: true, tvCoords: true, tvArrows: true,
     nextArrow: true, engArrow: true,
-    mode: 'analyse', quizSecs: 60, quizGood: 3, quizOk: 10, quizGoodCp: 0.5, quizOkCp: 1.5, quizMetric: 'both', quizTvNames: true,
+    mode: 'analyse', quizSecs: 60, quizGood: 3, quizOk: 10, quizGoodCp: 0.5, quizOkCp: 1.5, quizMetric: 'both', quizTvNames: true, quizTvFont: 1.4,
   };
   const settings = Object.assign({}, DEFAULTS, store.get('settings', {}));
   const saveSettings = () => store.set('settings', settings);
@@ -2189,6 +2189,7 @@ else {
         goodSans: good.map(g => fmtSan(g.san, settings.notation)),
         gameSan: fmtSan(r.gameSan || '', settings.notation),
         gameIsGood: !!gameUci && good.some(g => g.uci === gameUci),
+        legendScale: [1, 1.4, 1.8].includes(+settings.quizTvFont) ? +settings.quizTvFont : 1.4,
       };
     }
     if (QZ.tv === 'lobby') {
@@ -2380,6 +2381,8 @@ else {
       </div>
       <div class="sgrp">
         <h4>Fernseher</h4>
+        <div class="srow"><span>Schrift gute Züge / Partiezug</span><select data-qsel="quizTvFont">${[[1, 'normal'], [1.4, 'groß'], [1.8, 'sehr groß']]
+          .map(([v, t]) => `<option value="${v}"${+settings.quizTvFont === v ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
         <label class="chk"><input type="checkbox" data-qopt="quizTvNames" ${settings.quizTvNames ? 'checked' : ''}> Namen bei der Lösung zeigen</label>
       </div>
       ${open ? `<div class="sgrp">
@@ -2548,7 +2551,7 @@ else {
     if (o) { settings[o] = e.target.checked; saveSettings(); syncTv(); renderQuiz(); syncNamesBox(); return; }
     const sel = e.target.dataset.qsel;
     if (sel) {
-      settings[sel] = e.target.value; saveSettings();
+      settings[sel] = sel === 'quizTvFont' ? +e.target.value : e.target.value; saveSettings(); syncTv();
       // passende Grenzen ein- bzw. ausblenden
       if (!$('#qzSet').hidden) $('#qzSet').innerHTML = settingsHtml(true);
       renderQuiz(); return;
