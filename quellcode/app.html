@@ -332,6 +332,8 @@ select.mini { padding: 1px 4px; border-radius: 4px; border: 1px solid var(--line
 .quiz .tvsel button.on { border-color: var(--qgreen); color: var(--qlight); background: var(--qdark); }
 .quiz .set { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
 .quiz .set select, .set select { padding: 2px 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; color: var(--text); }
+/* alle Felder rechtsbündig, damit die Auswahlliste mit den Zahlenfeldern abschließt */
+.quiz .set > input, .quiz .set > select, .qzset .set > input, .qzset .set > select { justify-self: end; }
 .quiz .set input { width: 64px; padding: 2px 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; color: var(--text); }
 .quiz .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
 .quiz .bar > div { height: 100%; background: var(--qgreen); }
