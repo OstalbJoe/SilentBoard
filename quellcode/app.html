@@ -2365,6 +2365,13 @@ else {
         <div class="addr">${esc(url || 'kein WLAN gefunden')}${addrs.length > 1 ? ' <button data-act="addr">Netz wechseln</button>' : ''}</div>
         <button class="danger" data-act="close-pool" title="Alle Handys werden getrennt, die Punkte gelöscht">Raum schließen</button>` : ''}`;
   }
+  function lossTitle(m) {
+    if (m.loss == null) return '';
+    const n = v => String(v).replace('.', ',');
+    const wc = `Verlust an Gewinnchance gegenüber dem besten Zug: ${n(m.loss)} %`;
+    const cp = m.lossCp == null ? '' : `Verlust gegenüber dem besten Zug: ${n(m.lossCp.toFixed(1))} Bauern`;
+    return settings.quizMetric === 'wc' || !cp ? wc : settings.quizMetric === 'cp' ? cp : `${wc}\n${cp}`;
+  }
   function lossText(m) {
     if (m.loss == null) return '';
     const wc = m.loss + ' %', cp = m.lossCp == null ? '' : '−' + m.lossCp.toFixed(1).replace('.', ',') + ' B.';
@@ -2463,9 +2470,9 @@ else {
       const top = (r.top || []).map(t => `<span class="eng p${t.points}"><b>${esc(fmtSan(t.san, settings.notation))}</b> ${fmtScore(t)}</span>`).join('');
       bar.push(`<div class="qhead">Ergebnis</div>${top ? `<div class="engtop">Engine: ${top}</div>` : ''}
         <div class="qrow"><button class="qbtn go grow" data-act="next">Nächste Frage</button><button data-act="finish">Quiz beenden</button></div>`);
-      const rows = r.moves.map(m => `<span class="pts p${m.points == null ? 0 : m.points}">${m.points == null ? '–' : m.points}</span>
+      const rows = r.moves.map(m => `<span class="pts p${m.points == null ? 0 : m.points}" title="${m.points == null ? 'Keine Punkte' : m.points === 1 ? '1 Punkt' : m.points + ' Punkte'} für diesen Zug">${m.points == null ? '–' : m.points}</span>
         <span><b>${esc(fmtSan(m.san, settings.notation))}</b>${m.isGame ? '<span class="gm">Partiezug</span>' : ''}</span>
-        <span>${lossText(m)}</span><span>${m.count}×</span>
+        <span title="${esc(lossTitle(m))}">${lossText(m)}</span><span title="${m.count === 1 ? '1 Spieler hat' : m.count + ' Spieler haben'} diesen Zug gewählt">${m.count}×</span>
         <span></span><span class="who" style="grid-column: 2 / span 3">${esc(m.names || '')}</span>`).join('');
       mid.push(`<div class="mvlist">${rows || '<span>Keine Antworten</span>'}</div>`, playerTiles(st, q));
       tv = { cur: QZ.tvDone, opts: [['reveal', 'Lösung'], ['table', 'Tabelle'], ['board', 'Brett'], ['lobby', 'QR-Code']] };
